@@ -1,0 +1,2134 @@
+{
+  "sample_id": "tutorial_sample",
+  "n_layers_per_organ": 12,
+  "analysis_date": "2026-01-27T08:38:00.303044",
+  "conditions": {
+    "air": {
+      "scan_label": "tutorial_sample_air",
+      "n_layers_per_organ": 12,
+      "right_kidney": {
+        "kidney": "Right Kidney (Anatomical)",
+        "n_layers": 12,
+        "layers": [
+          {
+            "layer": 1,
+            "layer_number": 1,
+            "zone": "outer_cortex",
+            "n_pixels": 37,
+            "t2star": {
+              "mean": 31.617942810058594,
+              "median": 31.414657592773438,
+              "std": 2.281341791152954,
+              "min": 27.216798782348633,
+              "max": 36.63069534301758,
+              "q25": 30.4957332611084,
+              "q75": 32.93924331665039
+            },
+            "r2star": {
+              "mean": 31.79124641418457,
+              "median": 31.832273483276367,
+              "std": 2.2769947052001953,
+              "min": 27.299509048461914,
+              "max": 36.74201202392578
+            },
+            "perfusion": {
+              "mean": 248.3736572265625,
+              "median": 254.4884033203125,
+              "std": 21.775197982788086,
+              "min": 190.53387451171875,
+              "max": 294.6623229980469
+            },
+            "tissue_quality": {
+              "viable_pct": 100.0,
+              "suspect_edema_pct": 0.0,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 37,
+              "tissue_quality_score": 1.0
+            }
+          },
+          {
+            "layer": 2,
+            "layer_number": 2,
+            "zone": "outer_cortex",
+            "n_pixels": 118,
+            "t2star": {
+              "mean": 32.231170654296875,
+              "median": 32.445316314697266,
+              "std": 2.3255767822265625,
+              "min": 25.814273834228516,
+              "max": 38.5217399597168,
+              "q25": 30.691207885742188,
+              "q75": 33.504154205322266
+            },
+            "r2star": {
+              "mean": 31.190513610839844,
+              "median": 30.82122802734375,
+              "std": 2.2942118644714355,
+              "min": 25.959367752075195,
+              "max": 38.738258361816406
+            },
+            "perfusion": {
+              "mean": 241.6378936767578,
+              "median": 242.40646362304688,
+              "std": 18.64057731628418,
+              "min": 181.97100830078125,
+              "max": 284.33294677734375
+            },
+            "tissue_quality": {
+              "viable_pct": 100.0,
+              "suspect_edema_pct": 0.0,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 118,
+              "tissue_quality_score": 1.0
+            }
+          },
+          {
+            "layer": 3,
+            "layer_number": 3,
+            "zone": "outer_cortex",
+            "n_pixels": 194,
+            "t2star": {
+              "mean": 32.882747650146484,
+              "median": 32.92436981201172,
+              "std": 2.4354302883148193,
+              "min": 24.624103546142578,
+              "max": 42.359100341796875,
+              "q25": 31.043977737426758,
+              "q75": 34.415348052978516
+            },
+            "r2star": {
+              "mean": 30.578319549560547,
+              "median": 30.37264060974121,
+              "std": 2.2759182453155518,
+              "min": 23.607677459716797,
+              "max": 40.61061477661133
+            },
+            "perfusion": {
+              "mean": 232.4675750732422,
+              "median": 231.96450805664062,
+              "std": 19.668779373168945,
+              "min": 164.3065948486328,
+              "max": 286.1145324707031
+            },
+            "tissue_quality": {
+              "viable_pct": 99.48453608247422,
+              "suspect_edema_pct": 0.5154639175257731,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 194,
+              "tissue_quality_score": 0.9948453608247423
+            }
+          },
+          {
+            "layer": 4,
+            "layer_number": 4,
+            "zone": "outer_cortex",
+            "n_pixels": 266,
+            "t2star": {
+              "mean": 33.0531120300293,
+              "median": 33.04399871826172,
+              "std": 2.5198583602905273,
+              "min": 26.91179847717285,
+              "max": 40.78811264038086,
+              "q25": 31.185340881347656,
+              "q75": 34.68375778198242
+            },
+            "r2star": {
+              "mean": 30.43100357055664,
+              "median": 30.262680053710938,
+              "std": 2.32926869392395,
+              "min": 24.51694679260254,
+              "max": 37.158424377441406
+            },
+            "perfusion": {
+              "mean": 222.10769653320312,
+              "median": 221.945556640625,
+              "std": 19.925207138061523,
+              "min": 156.3049774169922,
+              "max": 290.2826232910156
+            },
+            "tissue_quality": {
+              "viable_pct": 99.62406015037594,
+              "suspect_edema_pct": 0.37593984962406013,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 266,
+              "tissue_quality_score": 0.9962406015037594
+            }
+          },
+          {
+            "layer": 5,
+            "layer_number": 5,
+            "zone": "outer_cortex",
+            "n_pixels": 338,
+            "t2star": {
+              "mean": 33.615806579589844,
+              "median": 33.54978561401367,
+              "std": 2.440220355987549,
+              "min": 26.71232795715332,
+              "max": 40.035499572753906,
+              "q25": 32.050594329833984,
+              "q75": 35.15903091430664
+            },
+            "r2star": {
+              "mean": 29.905794143676758,
+              "median": 29.806461334228516,
+              "std": 2.1859490871429443,
+              "min": 24.977832794189453,
+              "max": 37.43589782714844
+            },
+            "perfusion": {
+              "mean": 213.7946319580078,
+              "median": 213.60911560058594,
+              "std": 20.478303909301758,
+              "min": 152.95657348632812,
+              "max": 265.68597412109375
+            },
+            "tissue_quality": {
+              "viable_pct": 99.70414201183432,
+              "suspect_edema_pct": 0.2958579881656805,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 338,
+              "tissue_quality_score": 0.9970414201183432
+            }
+          },
+          {
+            "layer": 6,
+            "layer_number": 6,
+            "zone": "inner_cortex",
+            "n_pixels": 414,
+            "t2star": {
+              "mean": 33.97004318237305,
+              "median": 33.99378204345703,
+              "std": 2.5032472610473633,
+              "min": 26.577543258666992,
+              "max": 40.2674560546875,
+              "q25": 32.287109375,
+              "q75": 35.569271087646484
+            },
+            "r2star": {
+              "mean": 29.601802825927734,
+              "median": 29.417152404785156,
+              "std": 2.2397570610046387,
+              "min": 24.83395004272461,
+              "max": 37.62575149536133
+            },
+            "perfusion": {
+              "mean": 205.1880645751953,
+              "median": 205.84939575195312,
+              "std": 19.900251388549805,
+              "min": 144.67132568359375,
+              "max": 263.45037841796875
+            },
+            "tissue_quality": {
+              "viable_pct": 99.51690821256038,
+              "suspect_edema_pct": 0.4830917874396135,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 414,
+              "tissue_quality_score": 0.9951690821256038
+            }
+          },
+          {
+            "layer": 7,
+            "layer_number": 7,
+            "zone": "inner_cortex",
+            "n_pixels": 508,
+            "t2star": {
+              "mean": 34.373722076416016,
+              "median": 34.33018493652344,
+              "std": 2.4787213802337646,
+              "min": 26.878442764282227,
+              "max": 42.164588928222656,
+              "q25": 32.65612030029297,
+              "q75": 36.085723876953125
+            },
+            "r2star": {
+              "mean": 29.245771408081055,
+              "median": 29.12888526916504,
+              "std": 2.143815755844116,
+              "min": 23.716583251953125,
+              "max": 37.20453643798828
+            },
+            "perfusion": {
+              "mean": 195.41827392578125,
+              "median": 194.38641357421875,
+              "std": 19.432435989379883,
+              "min": 139.7953338623047,
+              "max": 261.13690185546875
+            },
+            "tissue_quality": {
+              "viable_pct": 99.21259842519686,
+              "suspect_edema_pct": 0.7874015748031495,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 508,
+              "tissue_quality_score": 0.9921259842519685
+            }
+          },
+          {
+            "layer": 8,
+            "layer_number": 8,
+            "zone": "inner_cortex",
+            "n_pixels": 578,
+            "t2star": {
+              "mean": 34.5242805480957,
+              "median": 34.51871871948242,
+              "std": 2.4230751991271973,
+              "min": 26.996673583984375,
+              "max": 42.389827728271484,
+              "q25": 32.93038558959961,
+              "q75": 36.15422821044922
+            },
+            "r2star": {
+              "mean": 29.110233306884766,
+              "median": 28.969789505004883,
+              "std": 2.07881760597229,
+              "min": 23.590564727783203,
+              "max": 37.04159927368164
+            },
+            "perfusion": {
+              "mean": 187.0888214111328,
+              "median": 187.2165069580078,
+              "std": 20.331687927246094,
+              "min": 134.7977752685547,
+              "max": 254.9418487548828
+            },
+            "tissue_quality": {
+              "viable_pct": 98.96193771626297,
+              "suspect_edema_pct": 1.0380622837370241,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 578,
+              "tissue_quality_score": 0.9896193771626297
+            }
+          },
+          {
+            "layer": 9,
+            "layer_number": 9,
+            "zone": "inner_cortex",
+            "n_pixels": 650,
+            "t2star": {
+              "mean": 34.94765853881836,
+              "median": 34.95161437988281,
+              "std": 2.513470411300659,
+              "min": 27.431251525878906,
+              "max": 44.72468566894531,
+              "q25": 33.33383560180664,
+              "q75": 36.537654876708984
+            },
+            "r2star": {
+              "mean": 28.76421356201172,
+              "median": 28.610980987548828,
+              "std": 2.097539186477661,
+              "min": 22.35901641845703,
+              "max": 36.45477294921875
+            },
+            "perfusion": {
+              "mean": 178.2657928466797,
+              "median": 178.89541625976562,
+              "std": 20.724607467651367,
+              "min": 115.6214828491211,
+              "max": 242.98719787597656
+            },
+            "tissue_quality": {
+              "viable_pct": 98.3076923076923,
+              "suspect_edema_pct": 1.6923076923076923,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 650,
+              "tissue_quality_score": 0.9830769230769231
+            }
+          },
+          {
+            "layer": 10,
+            "layer_number": 10,
+            "zone": "inner_cortex",
+            "n_pixels": 710,
+            "t2star": {
+              "mean": 35.25849533081055,
+              "median": 35.29820251464844,
+              "std": 2.5787901878356934,
+              "min": 27.949106216430664,
+              "max": 43.38045883178711,
+              "q25": 33.349178314208984,
+              "q75": 37.00124740600586
+            },
+            "r2star": {
+              "mean": 28.515743255615234,
+              "median": 28.330055236816406,
+              "std": 2.1127872467041016,
+              "min": 23.05185317993164,
+              "max": 35.779319763183594
+            },
+            "perfusion": {
+              "mean": 168.41490173339844,
+              "median": 168.1167755126953,
+              "std": 20.570114135742188,
+              "min": 101.59174346923828,
+              "max": 216.54893493652344
+            },
+            "tissue_quality": {
+              "viable_pct": 95.91549295774648,
+              "suspect_edema_pct": 4.084507042253521,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 710,
+              "tissue_quality_score": 0.9591549295774648
+            }
+          },
+          {
+            "layer": 11,
+            "layer_number": 11,
+            "zone": "cmj",
+            "n_pixels": 794,
+            "t2star": {
+              "mean": 35.48835372924805,
+              "median": 35.510765075683594,
+              "std": 2.4554643630981445,
+              "min": 28.11728286743164,
+              "max": 43.51650619506836,
+              "q25": 33.878623962402344,
+              "q75": 37.11708068847656
+            },
+            "r2star": {
+              "mean": 28.316204071044922,
+              "median": 28.16047477722168,
+              "std": 2.0029871463775635,
+              "min": 22.979785919189453,
+              "max": 35.56531524658203
+            },
+            "perfusion": {
+              "mean": 159.4150848388672,
+              "median": 159.43463134765625,
+              "std": 19.623266220092773,
+              "min": 86.38690185546875,
+              "max": 221.8993682861328
+            },
+            "tissue_quality": {
+              "viable_pct": 97.22921914357683,
+              "suspect_edema_pct": 2.770780856423174,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 794,
+              "tissue_quality_score": 0.9722921914357683
+            }
+          },
+          {
+            "layer": 12,
+            "layer_number": 12,
+            "zone": "cmj",
+            "n_pixels": 856,
+            "t2star": {
+              "mean": 35.92539596557617,
+              "median": 35.946754455566406,
+              "std": 2.4746007919311523,
+              "min": 28.05824089050293,
+              "max": 43.78227615356445,
+              "q25": 34.28940200805664,
+              "q75": 37.61210632324219
+            },
+            "r2star": {
+              "mean": 27.969200134277344,
+              "median": 27.818923950195312,
+              "std": 1.9521340131759644,
+              "min": 22.84029197692871,
+              "max": 35.64015197753906
+            },
+            "perfusion": {
+              "mean": 149.94631958007812,
+              "median": 149.86151123046875,
+              "std": 20.439722061157227,
+              "min": 83.84200286865234,
+              "max": 239.58168029785156
+            },
+            "tissue_quality": {
+              "viable_pct": 94.9766355140187,
+              "suspect_edema_pct": 5.0233644859813085,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 856,
+              "tissue_quality_score": 0.9497663551401869
+            }
+          }
+        ],
+        "gradient": {
+          "t2star": {
+            "cortex": 31.414657592773438,
+            "medulla": 35.946754455566406,
+            "gradient": 4.532096862792969,
+            "abnormal": true
+          },
+          "r2star": {
+            "cortex": 31.832273483276367,
+            "medulla": 27.818923950195312,
+            "gradient": -4.013349533081055
+          },
+          "perfusion": {
+            "cortex": 254.4884033203125,
+            "medulla": 149.86151123046875,
+            "gradient": -104.62689208984375
+          }
+        },
+        "zones": {
+          "outer_cortex": {
+            "zone": "outer_cortex",
+            "n_layers": 5,
+            "t2star": {
+              "mean": 32.67562561035156,
+              "median": 32.92436981201172,
+              "std": 0.7217770915612604
+            },
+            "r2star": {
+              "mean": 30.619056701660156,
+              "median": 30.37264060974121,
+              "std": 0.6871396715159661
+            },
+            "perfusion": {
+              "mean": 232.8828094482422,
+              "median": 231.96450805664062,
+              "std": 14.487537584854417
+            },
+            "tissue_quality": {
+              "viable_pct": 99.7625476489369,
+              "suspect_edema_pct": 0.23745235106310275,
+              "likely_necrosis_pct": 0.0
+            },
+            "interpretation": "\u2713 Viable tissue (100% viable)"
+          },
+          "inner_cortex": {
+            "zone": "inner_cortex",
+            "n_layers": 5,
+            "t2star": {
+              "mean": 34.618500518798825,
+              "median": 34.51871871948242,
+              "std": 0.45963357220708295
+            },
+            "r2star": {
+              "mean": 28.891372680664062,
+              "median": 28.969789505004883,
+              "std": 0.38280609208022837
+            },
+            "perfusion": {
+              "mean": 186.8929016113281,
+              "median": 187.2165069580078,
+              "std": 12.900455769329636
+            },
+            "tissue_quality": {
+              "viable_pct": 98.3829259238918,
+              "suspect_edema_pct": 1.6170740761082,
+              "likely_necrosis_pct": 0.0
+            },
+            "interpretation": "\u2713 Viable tissue (98% viable)"
+          },
+          "cmj": {
+            "zone": "cmj",
+            "n_layers": 2,
+            "t2star": {
+              "mean": 35.728759765625,
+              "median": 35.728759765625,
+              "std": 0.21799468994140625
+            },
+            "r2star": {
+              "mean": 27.989699363708496,
+              "median": 27.989699363708496,
+              "std": 0.1707754135131836
+            },
+            "perfusion": {
+              "mean": 154.6480712890625,
+              "median": 154.6480712890625,
+              "std": 4.78656005859375
+            },
+            "tissue_quality": {
+              "viable_pct": 96.10292732879776,
+              "suspect_edema_pct": 3.897072671202241,
+              "likely_necrosis_pct": 0.0
+            },
+            "interpretation": "\u2713 Viable tissue (96% viable)"
+          }
+        }
+      },
+      "left_kidney": {
+        "kidney": "Left Kidney (Anatomical)",
+        "n_layers": 12,
+        "layers": [],
+        "gradient": null,
+        "zones": {}
+      },
+      "bilateral": {
+        "layers": [
+          {
+            "layer": 1,
+            "zone": "outer_cortex",
+            "n_pixels": 37,
+            "t2star": {
+              "mean": 31.617942810058594,
+              "median": 31.414657592773438,
+              "std": 2.281341791152954
+            },
+            "r2star": {
+              "mean": 31.79124641418457,
+              "median": 31.832273483276367,
+              "std": 2.2769947052001953
+            },
+            "perfusion": {
+              "mean": 248.3736572265625,
+              "median": 254.4884033203125,
+              "std": 21.775197982788086
+            },
+            "tissue_quality": {
+              "viable_pct": 100.0,
+              "suspect_edema_pct": 0.0,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 37,
+              "tissue_quality_score": 1.0
+            }
+          },
+          {
+            "layer": 2,
+            "zone": "outer_cortex",
+            "n_pixels": 118,
+            "t2star": {
+              "mean": 32.231170654296875,
+              "median": 32.445316314697266,
+              "std": 2.3255767822265625
+            },
+            "r2star": {
+              "mean": 31.190513610839844,
+              "median": 30.82122802734375,
+              "std": 2.2942118644714355
+            },
+            "perfusion": {
+              "mean": 241.6378936767578,
+              "median": 242.40646362304688,
+              "std": 18.64057731628418
+            },
+            "tissue_quality": {
+              "viable_pct": 100.0,
+              "suspect_edema_pct": 0.0,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 118,
+              "tissue_quality_score": 1.0
+            }
+          },
+          {
+            "layer": 3,
+            "zone": "outer_cortex",
+            "n_pixels": 194,
+            "t2star": {
+              "mean": 32.882747650146484,
+              "median": 32.92436981201172,
+              "std": 2.4354302883148193
+            },
+            "r2star": {
+              "mean": 30.578319549560547,
+              "median": 30.37264060974121,
+              "std": 2.2759182453155518
+            },
+            "perfusion": {
+              "mean": 232.4675750732422,
+              "median": 231.96450805664062,
+              "std": 19.668779373168945
+            },
+            "tissue_quality": {
+              "viable_pct": 99.48453608247422,
+              "suspect_edema_pct": 0.5154639175257731,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 194,
+              "tissue_quality_score": 0.9948453608247423
+            }
+          },
+          {
+            "layer": 4,
+            "zone": "outer_cortex",
+            "n_pixels": 266,
+            "t2star": {
+              "mean": 33.0531120300293,
+              "median": 33.04399871826172,
+              "std": 2.5198583602905273
+            },
+            "r2star": {
+              "mean": 30.43100357055664,
+              "median": 30.262680053710938,
+              "std": 2.32926869392395
+            },
+            "perfusion": {
+              "mean": 222.10769653320312,
+              "median": 221.945556640625,
+              "std": 19.925207138061523
+            },
+            "tissue_quality": {
+              "viable_pct": 99.62406015037594,
+              "suspect_edema_pct": 0.37593984962406013,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 266,
+              "tissue_quality_score": 0.9962406015037594
+            }
+          },
+          {
+            "layer": 5,
+            "zone": "outer_cortex",
+            "n_pixels": 338,
+            "t2star": {
+              "mean": 33.615806579589844,
+              "median": 33.54978561401367,
+              "std": 2.440220355987549
+            },
+            "r2star": {
+              "mean": 29.905794143676758,
+              "median": 29.806461334228516,
+              "std": 2.1859490871429443
+            },
+            "perfusion": {
+              "mean": 213.7946319580078,
+              "median": 213.60911560058594,
+              "std": 20.478303909301758
+            },
+            "tissue_quality": {
+              "viable_pct": 99.70414201183432,
+              "suspect_edema_pct": 0.2958579881656805,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 338,
+              "tissue_quality_score": 0.9970414201183432
+            }
+          },
+          {
+            "layer": 6,
+            "zone": "inner_cortex",
+            "n_pixels": 414,
+            "t2star": {
+              "mean": 33.97004318237305,
+              "median": 33.99378204345703,
+              "std": 2.5032472610473633
+            },
+            "r2star": {
+              "mean": 29.601802825927734,
+              "median": 29.417152404785156,
+              "std": 2.2397570610046387
+            },
+            "perfusion": {
+              "mean": 205.1880645751953,
+              "median": 205.84939575195312,
+              "std": 19.900251388549805
+            },
+            "tissue_quality": {
+              "viable_pct": 99.51690821256038,
+              "suspect_edema_pct": 0.4830917874396135,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 414,
+              "tissue_quality_score": 0.9951690821256038
+            }
+          },
+          {
+            "layer": 7,
+            "zone": "inner_cortex",
+            "n_pixels": 508,
+            "t2star": {
+              "mean": 34.373722076416016,
+              "median": 34.33018493652344,
+              "std": 2.4787213802337646
+            },
+            "r2star": {
+              "mean": 29.245771408081055,
+              "median": 29.12888526916504,
+              "std": 2.143815755844116
+            },
+            "perfusion": {
+              "mean": 195.41827392578125,
+              "median": 194.38641357421875,
+              "std": 19.432435989379883
+            },
+            "tissue_quality": {
+              "viable_pct": 99.21259842519686,
+              "suspect_edema_pct": 0.7874015748031495,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 508,
+              "tissue_quality_score": 0.9921259842519685
+            }
+          },
+          {
+            "layer": 8,
+            "zone": "inner_cortex",
+            "n_pixels": 578,
+            "t2star": {
+              "mean": 34.5242805480957,
+              "median": 34.51871871948242,
+              "std": 2.4230751991271973
+            },
+            "r2star": {
+              "mean": 29.110233306884766,
+              "median": 28.969789505004883,
+              "std": 2.07881760597229
+            },
+            "perfusion": {
+              "mean": 187.0888214111328,
+              "median": 187.2165069580078,
+              "std": 20.331687927246094
+            },
+            "tissue_quality": {
+              "viable_pct": 98.96193771626297,
+              "suspect_edema_pct": 1.0380622837370241,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 578,
+              "tissue_quality_score": 0.9896193771626297
+            }
+          },
+          {
+            "layer": 9,
+            "zone": "inner_cortex",
+            "n_pixels": 650,
+            "t2star": {
+              "mean": 34.94765853881836,
+              "median": 34.95161437988281,
+              "std": 2.513470411300659
+            },
+            "r2star": {
+              "mean": 28.76421356201172,
+              "median": 28.610980987548828,
+              "std": 2.097539186477661
+            },
+            "perfusion": {
+              "mean": 178.2657928466797,
+              "median": 178.89541625976562,
+              "std": 20.724607467651367
+            },
+            "tissue_quality": {
+              "viable_pct": 98.3076923076923,
+              "suspect_edema_pct": 1.6923076923076923,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 650,
+              "tissue_quality_score": 0.9830769230769231
+            }
+          },
+          {
+            "layer": 10,
+            "zone": "inner_cortex",
+            "n_pixels": 710,
+            "t2star": {
+              "mean": 35.25849533081055,
+              "median": 35.29820251464844,
+              "std": 2.5787901878356934
+            },
+            "r2star": {
+              "mean": 28.515743255615234,
+              "median": 28.330055236816406,
+              "std": 2.1127872467041016
+            },
+            "perfusion": {
+              "mean": 168.41490173339844,
+              "median": 168.1167755126953,
+              "std": 20.570114135742188
+            },
+            "tissue_quality": {
+              "viable_pct": 95.91549295774648,
+              "suspect_edema_pct": 4.084507042253521,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 710,
+              "tissue_quality_score": 0.9591549295774648
+            }
+          },
+          {
+            "layer": 11,
+            "zone": "cmj",
+            "n_pixels": 794,
+            "t2star": {
+              "mean": 35.48835372924805,
+              "median": 35.510765075683594,
+              "std": 2.4554643630981445
+            },
+            "r2star": {
+              "mean": 28.316204071044922,
+              "median": 28.16047477722168,
+              "std": 2.0029871463775635
+            },
+            "perfusion": {
+              "mean": 159.4150848388672,
+              "median": 159.43463134765625,
+              "std": 19.623266220092773
+            },
+            "tissue_quality": {
+              "viable_pct": 97.22921914357683,
+              "suspect_edema_pct": 2.770780856423174,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 794,
+              "tissue_quality_score": 0.9722921914357683
+            }
+          },
+          {
+            "layer": 12,
+            "zone": "cmj",
+            "n_pixels": 856,
+            "t2star": {
+              "mean": 35.92539596557617,
+              "median": 35.946754455566406,
+              "std": 2.4746007919311523
+            },
+            "r2star": {
+              "mean": 27.969200134277344,
+              "median": 27.818923950195312,
+              "std": 1.9521340131759644
+            },
+            "perfusion": {
+              "mean": 149.94631958007812,
+              "median": 149.86151123046875,
+              "std": 20.439722061157227
+            },
+            "tissue_quality": {
+              "viable_pct": 94.9766355140187,
+              "suspect_edema_pct": 5.0233644859813085,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 856,
+              "tissue_quality_score": 0.9497663551401869
+            }
+          }
+        ],
+        "gradient": {
+          "t2star": {
+            "cortex": 31.414657592773438,
+            "medulla": 35.946754455566406,
+            "gradient": 4.532096862792969,
+            "abnormal": true
+          },
+          "r2star": {
+            "cortex": 31.832273483276367,
+            "medulla": 27.818923950195312,
+            "gradient": -4.013349533081055
+          },
+          "perfusion": {
+            "cortex": 254.4884033203125,
+            "medulla": 149.86151123046875,
+            "gradient": -104.62689208984375
+          }
+        },
+        "zones": {
+          "outer_cortex": {
+            "zone": "outer_cortex",
+            "n_layers": 5,
+            "t2star": {
+              "mean": 32.67562561035156,
+              "median": 32.92436981201172,
+              "std": 0.7217770915612604
+            },
+            "r2star": {
+              "mean": 30.619056701660156,
+              "median": 30.37264060974121,
+              "std": 0.6871396715159661
+            },
+            "perfusion": {
+              "mean": 232.8828094482422,
+              "median": 231.96450805664062,
+              "std": 14.487537584854417
+            },
+            "tissue_quality": {
+              "viable_pct": 99.7625476489369,
+              "suspect_edema_pct": 0.23745235106310275,
+              "likely_necrosis_pct": 0.0
+            },
+            "interpretation": "\u2713 Viable tissue (100% viable)"
+          },
+          "inner_cortex": {
+            "zone": "inner_cortex",
+            "n_layers": 5,
+            "t2star": {
+              "mean": 34.618500518798825,
+              "median": 34.51871871948242,
+              "std": 0.45963357220708295
+            },
+            "r2star": {
+              "mean": 28.891372680664062,
+              "median": 28.969789505004883,
+              "std": 0.38280609208022837
+            },
+            "perfusion": {
+              "mean": 186.8929016113281,
+              "median": 187.2165069580078,
+              "std": 12.900455769329636
+            },
+            "tissue_quality": {
+              "viable_pct": 98.3829259238918,
+              "suspect_edema_pct": 1.6170740761082,
+              "likely_necrosis_pct": 0.0
+            },
+            "interpretation": "\u2713 Viable tissue (98% viable)"
+          },
+          "cmj": {
+            "zone": "cmj",
+            "n_layers": 2,
+            "t2star": {
+              "mean": 35.728759765625,
+              "median": 35.728759765625,
+              "std": 0.21799468994140625
+            },
+            "r2star": {
+              "mean": 27.989699363708496,
+              "median": 27.989699363708496,
+              "std": 0.1707754135131836
+            },
+            "perfusion": {
+              "mean": 154.6480712890625,
+              "median": 154.6480712890625,
+              "std": 4.78656005859375
+            },
+            "tissue_quality": {
+              "viable_pct": 96.10292732879776,
+              "suspect_edema_pct": 3.897072671202241,
+              "likely_necrosis_pct": 0.0
+            },
+            "interpretation": "\u2713 Viable tissue (96% viable)"
+          }
+        }
+      },
+      "heterogeneity": {
+        "layer_cv": [
+          {
+            "layer": 1,
+            "cv": 7.215339103046238,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 2,
+            "cv": 7.215303493534542,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 3,
+            "cv": 7.406407500450986,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 4,
+            "cv": 7.623664476740327,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 5,
+            "cv": 7.25914563498575,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 6,
+            "cv": 7.368984630394261,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 7,
+            "cv": 7.211093912737568,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 8,
+            "cv": 7.018466889560859,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 9,
+            "cv": 7.192099603779761,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 10,
+            "cv": 7.313954165202915,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 11,
+            "cv": 6.919070920650938,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 12,
+            "cv": 6.888165670608955,
+            "interpretation": "homogeneous"
+          }
+        ],
+        "zone_cv": {
+          "cortex": {
+            "mean": 7.282445941043321,
+            "max": 7.623664476740327,
+            "interpretation": "homogeneous"
+          }
+        }
+      }
+    },
+    "oxygen1": {
+      "scan_label": "tutorial_sample_oxygen1",
+      "n_layers_per_organ": 12,
+      "right_kidney": {
+        "kidney": "Right Kidney (Anatomical)",
+        "n_layers": 12,
+        "layers": [
+          {
+            "layer": 1,
+            "layer_number": 1,
+            "zone": "outer_cortex",
+            "n_pixels": 37,
+            "t2star": {
+              "mean": 34.27763748168945,
+              "median": 34.35006332397461,
+              "std": 2.519059419631958,
+              "min": 28.21688461303711,
+              "max": 39.47031784057617,
+              "q25": 32.785587310791016,
+              "q75": 35.81656265258789
+            },
+            "r2star": {
+              "mean": 29.334970474243164,
+              "median": 29.112028121948242,
+              "std": 2.20866060256958,
+              "min": 25.335493087768555,
+              "max": 35.43977355957031
+            },
+            "perfusion": {
+              "mean": 248.3736572265625,
+              "median": 254.4884033203125,
+              "std": 21.775197982788086,
+              "min": 190.53387451171875,
+              "max": 294.6623229980469
+            },
+            "tissue_quality": {
+              "viable_pct": 100.0,
+              "suspect_edema_pct": 0.0,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 37,
+              "tissue_quality_score": 1.0
+            }
+          },
+          {
+            "layer": 2,
+            "layer_number": 2,
+            "zone": "outer_cortex",
+            "n_pixels": 118,
+            "t2star": {
+              "mean": 34.82814407348633,
+              "median": 34.73426818847656,
+              "std": 2.412390947341919,
+              "min": 27.748321533203125,
+              "max": 41.73837661743164,
+              "q25": 33.279327392578125,
+              "q75": 36.51256561279297
+            },
+            "r2star": {
+              "mean": 28.852659225463867,
+              "median": 28.790010452270508,
+              "std": 2.035402774810791,
+              "min": 23.95876693725586,
+              "max": 36.03821563720703
+            },
+            "perfusion": {
+              "mean": 241.6378936767578,
+              "median": 242.40646362304688,
+              "std": 18.64057731628418,
+              "min": 181.97100830078125,
+              "max": 284.33294677734375
+            },
+            "tissue_quality": {
+              "viable_pct": 98.30508474576271,
+              "suspect_edema_pct": 1.694915254237288,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 118,
+              "tissue_quality_score": 0.9830508474576272
+            }
+          },
+          {
+            "layer": 3,
+            "layer_number": 3,
+            "zone": "outer_cortex",
+            "n_pixels": 194,
+            "t2star": {
+              "mean": 35.38404083251953,
+              "median": 35.417633056640625,
+              "std": 2.635401487350464,
+              "min": 29.282766342163086,
+              "max": 44.661231994628906,
+              "q25": 33.515846252441406,
+              "q75": 37.15553283691406
+            },
+            "r2star": {
+              "mean": 28.41830062866211,
+              "median": 28.234529495239258,
+              "std": 2.1185758113861084,
+              "min": 22.390783309936523,
+              "max": 34.1497802734375
+            },
+            "perfusion": {
+              "mean": 232.4675750732422,
+              "median": 231.96450805664062,
+              "std": 19.668779373168945,
+              "min": 164.3065948486328,
+              "max": 286.1145324707031
+            },
+            "tissue_quality": {
+              "viable_pct": 94.3298969072165,
+              "suspect_edema_pct": 5.670103092783505,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 194,
+              "tissue_quality_score": 0.9432989690721649
+            }
+          },
+          {
+            "layer": 4,
+            "layer_number": 4,
+            "zone": "outer_cortex",
+            "n_pixels": 266,
+            "t2star": {
+              "mean": 35.50871658325195,
+              "median": 35.51033401489258,
+              "std": 2.6323297023773193,
+              "min": 29.441020965576172,
+              "max": 43.46800994873047,
+              "q25": 33.6667594909668,
+              "q75": 37.356468200683594
+            },
+            "r2star": {
+              "mean": 28.317195892333984,
+              "median": 28.160816192626953,
+              "std": 2.1026883125305176,
+              "min": 23.00542449951172,
+              "max": 33.96621322631836
+            },
+            "perfusion": {
+              "mean": 222.10769653320312,
+              "median": 221.945556640625,
+              "std": 19.925207138061523,
+              "min": 156.3049774169922,
+              "max": 290.2826232910156
+            },
+            "tissue_quality": {
+              "viable_pct": 95.86466165413535,
+              "suspect_edema_pct": 4.135338345864661,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 266,
+              "tissue_quality_score": 0.9586466165413534
+            }
+          },
+          {
+            "layer": 5,
+            "layer_number": 5,
+            "zone": "outer_cortex",
+            "n_pixels": 338,
+            "t2star": {
+              "mean": 36.083152770996094,
+              "median": 35.96294021606445,
+              "std": 2.507814884185791,
+              "min": 29.610137939453125,
+              "max": 43.2916374206543,
+              "q25": 34.23815155029297,
+              "q75": 37.88874053955078
+            },
+            "r2star": {
+              "mean": 27.847578048706055,
+              "median": 27.80640411376953,
+              "std": 1.933530330657959,
+              "min": 23.099149703979492,
+              "max": 33.772216796875
+            },
+            "perfusion": {
+              "mean": 213.7946319580078,
+              "median": 213.60911560058594,
+              "std": 20.478303909301758,
+              "min": 152.95657348632812,
+              "max": 265.68597412109375
+            },
+            "tissue_quality": {
+              "viable_pct": 92.60355029585799,
+              "suspect_edema_pct": 7.396449704142012,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 338,
+              "tissue_quality_score": 0.9260355029585798
+            }
+          },
+          {
+            "layer": 6,
+            "layer_number": 6,
+            "zone": "inner_cortex",
+            "n_pixels": 414,
+            "t2star": {
+              "mean": 36.46034622192383,
+              "median": 36.56532287597656,
+              "std": 2.7107768058776855,
+              "min": 27.30284309387207,
+              "max": 43.8644905090332,
+              "q25": 34.60395431518555,
+              "q75": 38.19200897216797
+            },
+            "r2star": {
+              "mean": 27.58266258239746,
+              "median": 27.348316192626953,
+              "std": 2.105806589126587,
+              "min": 22.797483444213867,
+              "max": 36.626220703125
+            },
+            "perfusion": {
+              "mean": 205.1880645751953,
+              "median": 205.84939575195312,
+              "std": 19.900251388549805,
+              "min": 144.67132568359375,
+              "max": 263.45037841796875
+            },
+            "tissue_quality": {
+              "viable_pct": 90.82125603864735,
+              "suspect_edema_pct": 9.178743961352657,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 414,
+              "tissue_quality_score": 0.9082125603864735
+            }
+          },
+          {
+            "layer": 7,
+            "layer_number": 7,
+            "zone": "inner_cortex",
+            "n_pixels": 508,
+            "t2star": {
+              "mean": 36.910465240478516,
+              "median": 36.88378143310547,
+              "std": 2.614475727081299,
+              "min": 29.285171508789062,
+              "max": 44.889556884765625,
+              "q25": 35.15480422973633,
+              "q75": 38.638397216796875
+            },
+            "r2star": {
+              "mean": 27.230947494506836,
+              "median": 27.1121883392334,
+              "std": 1.9632254838943481,
+              "min": 22.27689552307129,
+              "max": 34.14697265625
+            },
+            "perfusion": {
+              "mean": 195.41827392578125,
+              "median": 194.38641357421875,
+              "std": 19.432435989379883,
+              "min": 139.7953338623047,
+              "max": 261.13690185546875
+            },
+            "tissue_quality": {
+              "viable_pct": 87.20472440944881,
+              "suspect_edema_pct": 12.795275590551181,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 508,
+              "tissue_quality_score": 0.8720472440944882
+            }
+          },
+          {
+            "layer": 8,
+            "layer_number": 8,
+            "zone": "inner_cortex",
+            "n_pixels": 578,
+            "t2star": {
+              "mean": 37.013240814208984,
+              "median": 37.02566909790039,
+              "std": 2.555767774581909,
+              "min": 28.789579391479492,
+              "max": 45.538230895996094,
+              "q25": 35.17784118652344,
+              "q75": 38.712066650390625
+            },
+            "r2star": {
+              "mean": 27.147785186767578,
+              "median": 27.008289337158203,
+              "std": 1.8983728885650635,
+              "min": 21.959569931030273,
+              "max": 34.73479080200195
+            },
+            "perfusion": {
+              "mean": 187.0888214111328,
+              "median": 187.2165069580078,
+              "std": 20.331687927246094,
+              "min": 134.7977752685547,
+              "max": 254.9418487548828
+            },
+            "tissue_quality": {
+              "viable_pct": 88.58131487889274,
+              "suspect_edema_pct": 11.418685121107266,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 578,
+              "tissue_quality_score": 0.8858131487889274
+            }
+          },
+          {
+            "layer": 9,
+            "layer_number": 9,
+            "zone": "inner_cortex",
+            "n_pixels": 650,
+            "t2star": {
+              "mean": 37.440181732177734,
+              "median": 37.42048263549805,
+              "std": 2.61213755607605,
+              "min": 29.270578384399414,
+              "max": 46.257137298583984,
+              "q25": 35.7315559387207,
+              "q75": 39.160728454589844
+            },
+            "r2star": {
+              "mean": 26.84131622314453,
+              "median": 26.72333526611328,
+              "std": 1.9026857614517212,
+              "min": 21.6182861328125,
+              "max": 34.163997650146484
+            },
+            "perfusion": {
+              "mean": 178.2657928466797,
+              "median": 178.89541625976562,
+              "std": 20.724607467651367,
+              "min": 115.6214828491211,
+              "max": 242.98719787597656
+            },
+            "tissue_quality": {
+              "viable_pct": 84.15384615384616,
+              "suspect_edema_pct": 15.846153846153847,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 650,
+              "tissue_quality_score": 0.8415384615384616
+            }
+          },
+          {
+            "layer": 10,
+            "layer_number": 10,
+            "zone": "inner_cortex",
+            "n_pixels": 710,
+            "t2star": {
+              "mean": 37.69529342651367,
+              "median": 37.724422454833984,
+              "std": 2.7230887413024902,
+              "min": 29.839553833007812,
+              "max": 44.99749755859375,
+              "q25": 35.73728561401367,
+              "q75": 39.5519905090332
+            },
+            "r2star": {
+              "mean": 26.669124603271484,
+              "median": 26.508026123046875,
+              "std": 1.9556524753570557,
+              "min": 22.22345733642578,
+              "max": 33.51256561279297
+            },
+            "perfusion": {
+              "mean": 168.41490173339844,
+              "median": 168.1167755126953,
+              "std": 20.570114135742188,
+              "min": 101.59174346923828,
+              "max": 216.54893493652344
+            },
+            "tissue_quality": {
+              "viable_pct": 80.0,
+              "suspect_edema_pct": 20.0,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 710,
+              "tissue_quality_score": 0.8
+            }
+          },
+          {
+            "layer": 11,
+            "layer_number": 11,
+            "zone": "cmj",
+            "n_pixels": 794,
+            "t2star": {
+              "mean": 37.97726058959961,
+              "median": 38.054046630859375,
+              "std": 2.614650011062622,
+              "min": 29.376972198486328,
+              "max": 45.378814697265625,
+              "q25": 36.316097259521484,
+              "q75": 39.81319046020508
+            },
+            "r2star": {
+              "mean": 26.45922088623047,
+              "median": 26.278411865234375,
+              "std": 1.8628413677215576,
+              "min": 22.036714553833008,
+              "max": 34.04026794433594
+            },
+            "perfusion": {
+              "mean": 159.4150848388672,
+              "median": 159.43463134765625,
+              "std": 19.623266220092773,
+              "min": 86.38690185546875,
+              "max": 221.8993682861328
+            },
+            "tissue_quality": {
+              "viable_pct": 77.07808564231739,
+              "suspect_edema_pct": 22.921914357682617,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 794,
+              "tissue_quality_score": 0.7707808564231738
+            }
+          },
+          {
+            "layer": 12,
+            "layer_number": 12,
+            "zone": "cmj",
+            "n_pixels": 856,
+            "t2star": {
+              "mean": 38.42275619506836,
+              "median": 38.3433723449707,
+              "std": 2.58707332611084,
+              "min": 30.7056884765625,
+              "max": 47.01514434814453,
+              "q25": 36.710121154785156,
+              "q75": 40.13969039916992
+            },
+            "r2star": {
+              "mean": 26.14533233642578,
+              "median": 26.08012580871582,
+              "std": 1.7776721715927124,
+              "min": 21.269742965698242,
+              "max": 32.567256927490234
+            },
+            "perfusion": {
+              "mean": 149.94631958007812,
+              "median": 149.86151123046875,
+              "std": 20.439722061157227,
+              "min": 83.84200286865234,
+              "max": 239.58168029785156
+            },
+            "tissue_quality": {
+              "viable_pct": 72.66355140186917,
+              "suspect_edema_pct": 27.33644859813084,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 856,
+              "tissue_quality_score": 0.7266355140186916
+            }
+          }
+        ],
+        "gradient": {
+          "t2star": {
+            "cortex": 34.35006332397461,
+            "medulla": 38.3433723449707,
+            "gradient": 3.9933090209960938,
+            "abnormal": true
+          },
+          "r2star": {
+            "cortex": 29.112028121948242,
+            "medulla": 26.08012580871582,
+            "gradient": -3.031902313232422
+          },
+          "perfusion": {
+            "cortex": 254.4884033203125,
+            "medulla": 149.86151123046875,
+            "gradient": -104.62689208984375
+          }
+        },
+        "zones": {
+          "outer_cortex": {
+            "zone": "outer_cortex",
+            "n_layers": 5,
+            "t2star": {
+              "mean": 35.195047760009764,
+              "median": 35.417633056640625,
+              "std": 0.5770485198913434
+            },
+            "r2star": {
+              "mean": 28.420757675170897,
+              "median": 28.234529495239258,
+              "std": 0.46773566289900564
+            },
+            "perfusion": {
+              "mean": 232.8828094482422,
+              "median": 231.96450805664062,
+              "std": 14.487537584854417
+            },
+            "tissue_quality": {
+              "viable_pct": 96.22063872059451,
+              "suspect_edema_pct": 3.779361279405493,
+              "likely_necrosis_pct": 0.0
+            },
+            "interpretation": "\u2713 Viable tissue (96% viable)"
+          },
+          "inner_cortex": {
+            "zone": "inner_cortex",
+            "n_layers": 5,
+            "t2star": {
+              "mean": 37.12393569946289,
+              "median": 37.02566909790039,
+              "std": 0.40691598932546874
+            },
+            "r2star": {
+              "mean": 26.940031051635742,
+              "median": 27.008289337158203,
+              "std": 0.2948149939734849
+            },
+            "perfusion": {
+              "mean": 186.8929016113281,
+              "median": 187.2165069580078,
+              "std": 12.900455769329636
+            },
+            "tissue_quality": {
+              "viable_pct": 86.15222829616701,
+              "suspect_edema_pct": 13.84777170383299,
+              "likely_necrosis_pct": 0.0
+            },
+            "interpretation": "Tissue quality: 86% viable, 14% suspect"
+          },
+          "cmj": {
+            "zone": "cmj",
+            "n_layers": 2,
+            "t2star": {
+              "mean": 38.19870948791504,
+              "median": 38.19870948791504,
+              "std": 0.14466285705566406
+            },
+            "r2star": {
+              "mean": 26.179268836975098,
+              "median": 26.179268836975098,
+              "std": 0.09914302825927734
+            },
+            "perfusion": {
+              "mean": 154.6480712890625,
+              "median": 154.6480712890625,
+              "std": 4.78656005859375
+            },
+            "tissue_quality": {
+              "viable_pct": 74.87081852209329,
+              "suspect_edema_pct": 25.129181477906727,
+              "likely_necrosis_pct": 0.0
+            },
+            "interpretation": "\u26a0\ufe0f Tissue stress - 0% necrotic, 25% edematous"
+          }
+        }
+      },
+      "left_kidney": {
+        "kidney": "Left Kidney (Anatomical)",
+        "n_layers": 12,
+        "layers": [],
+        "gradient": null,
+        "zones": {}
+      },
+      "bilateral": {
+        "layers": [
+          {
+            "layer": 1,
+            "zone": "outer_cortex",
+            "n_pixels": 37,
+            "t2star": {
+              "mean": 34.27763748168945,
+              "median": 34.35006332397461,
+              "std": 2.519059419631958
+            },
+            "r2star": {
+              "mean": 29.334970474243164,
+              "median": 29.112028121948242,
+              "std": 2.20866060256958
+            },
+            "perfusion": {
+              "mean": 248.3736572265625,
+              "median": 254.4884033203125,
+              "std": 21.775197982788086
+            },
+            "tissue_quality": {
+              "viable_pct": 100.0,
+              "suspect_edema_pct": 0.0,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 37,
+              "tissue_quality_score": 1.0
+            }
+          },
+          {
+            "layer": 2,
+            "zone": "outer_cortex",
+            "n_pixels": 118,
+            "t2star": {
+              "mean": 34.82814407348633,
+              "median": 34.73426818847656,
+              "std": 2.412390947341919
+            },
+            "r2star": {
+              "mean": 28.852659225463867,
+              "median": 28.790010452270508,
+              "std": 2.035402774810791
+            },
+            "perfusion": {
+              "mean": 241.6378936767578,
+              "median": 242.40646362304688,
+              "std": 18.64057731628418
+            },
+            "tissue_quality": {
+              "viable_pct": 98.30508474576271,
+              "suspect_edema_pct": 1.694915254237288,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 118,
+              "tissue_quality_score": 0.9830508474576272
+            }
+          },
+          {
+            "layer": 3,
+            "zone": "outer_cortex",
+            "n_pixels": 194,
+            "t2star": {
+              "mean": 35.38404083251953,
+              "median": 35.417633056640625,
+              "std": 2.635401487350464
+            },
+            "r2star": {
+              "mean": 28.41830062866211,
+              "median": 28.234529495239258,
+              "std": 2.1185758113861084
+            },
+            "perfusion": {
+              "mean": 232.4675750732422,
+              "median": 231.96450805664062,
+              "std": 19.668779373168945
+            },
+            "tissue_quality": {
+              "viable_pct": 94.3298969072165,
+              "suspect_edema_pct": 5.670103092783505,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 194,
+              "tissue_quality_score": 0.9432989690721649
+            }
+          },
+          {
+            "layer": 4,
+            "zone": "outer_cortex",
+            "n_pixels": 266,
+            "t2star": {
+              "mean": 35.50871658325195,
+              "median": 35.51033401489258,
+              "std": 2.6323297023773193
+            },
+            "r2star": {
+              "mean": 28.317195892333984,
+              "median": 28.160816192626953,
+              "std": 2.1026883125305176
+            },
+            "perfusion": {
+              "mean": 222.10769653320312,
+              "median": 221.945556640625,
+              "std": 19.925207138061523
+            },
+            "tissue_quality": {
+              "viable_pct": 95.86466165413535,
+              "suspect_edema_pct": 4.135338345864661,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 266,
+              "tissue_quality_score": 0.9586466165413534
+            }
+          },
+          {
+            "layer": 5,
+            "zone": "outer_cortex",
+            "n_pixels": 338,
+            "t2star": {
+              "mean": 36.083152770996094,
+              "median": 35.96294021606445,
+              "std": 2.507814884185791
+            },
+            "r2star": {
+              "mean": 27.847578048706055,
+              "median": 27.80640411376953,
+              "std": 1.933530330657959
+            },
+            "perfusion": {
+              "mean": 213.7946319580078,
+              "median": 213.60911560058594,
+              "std": 20.478303909301758
+            },
+            "tissue_quality": {
+              "viable_pct": 92.60355029585799,
+              "suspect_edema_pct": 7.396449704142012,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 338,
+              "tissue_quality_score": 0.9260355029585798
+            }
+          },
+          {
+            "layer": 6,
+            "zone": "inner_cortex",
+            "n_pixels": 414,
+            "t2star": {
+              "mean": 36.46034622192383,
+              "median": 36.56532287597656,
+              "std": 2.7107768058776855
+            },
+            "r2star": {
+              "mean": 27.58266258239746,
+              "median": 27.348316192626953,
+              "std": 2.105806589126587
+            },
+            "perfusion": {
+              "mean": 205.1880645751953,
+              "median": 205.84939575195312,
+              "std": 19.900251388549805
+            },
+            "tissue_quality": {
+              "viable_pct": 90.82125603864735,
+              "suspect_edema_pct": 9.178743961352657,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 414,
+              "tissue_quality_score": 0.9082125603864735
+            }
+          },
+          {
+            "layer": 7,
+            "zone": "inner_cortex",
+            "n_pixels": 508,
+            "t2star": {
+              "mean": 36.910465240478516,
+              "median": 36.88378143310547,
+              "std": 2.614475727081299
+            },
+            "r2star": {
+              "mean": 27.230947494506836,
+              "median": 27.1121883392334,
+              "std": 1.9632254838943481
+            },
+            "perfusion": {
+              "mean": 195.41827392578125,
+              "median": 194.38641357421875,
+              "std": 19.432435989379883
+            },
+            "tissue_quality": {
+              "viable_pct": 87.20472440944881,
+              "suspect_edema_pct": 12.795275590551181,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 508,
+              "tissue_quality_score": 0.8720472440944882
+            }
+          },
+          {
+            "layer": 8,
+            "zone": "inner_cortex",
+            "n_pixels": 578,
+            "t2star": {
+              "mean": 37.013240814208984,
+              "median": 37.02566909790039,
+              "std": 2.555767774581909
+            },
+            "r2star": {
+              "mean": 27.147785186767578,
+              "median": 27.008289337158203,
+              "std": 1.8983728885650635
+            },
+            "perfusion": {
+              "mean": 187.0888214111328,
+              "median": 187.2165069580078,
+              "std": 20.331687927246094
+            },
+            "tissue_quality": {
+              "viable_pct": 88.58131487889274,
+              "suspect_edema_pct": 11.418685121107266,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 578,
+              "tissue_quality_score": 0.8858131487889274
+            }
+          },
+          {
+            "layer": 9,
+            "zone": "inner_cortex",
+            "n_pixels": 650,
+            "t2star": {
+              "mean": 37.440181732177734,
+              "median": 37.42048263549805,
+              "std": 2.61213755607605
+            },
+            "r2star": {
+              "mean": 26.84131622314453,
+              "median": 26.72333526611328,
+              "std": 1.9026857614517212
+            },
+            "perfusion": {
+              "mean": 178.2657928466797,
+              "median": 178.89541625976562,
+              "std": 20.724607467651367
+            },
+            "tissue_quality": {
+              "viable_pct": 84.15384615384616,
+              "suspect_edema_pct": 15.846153846153847,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 650,
+              "tissue_quality_score": 0.8415384615384616
+            }
+          },
+          {
+            "layer": 10,
+            "zone": "inner_cortex",
+            "n_pixels": 710,
+            "t2star": {
+              "mean": 37.69529342651367,
+              "median": 37.724422454833984,
+              "std": 2.7230887413024902
+            },
+            "r2star": {
+              "mean": 26.669124603271484,
+              "median": 26.508026123046875,
+              "std": 1.9556524753570557
+            },
+            "perfusion": {
+              "mean": 168.41490173339844,
+              "median": 168.1167755126953,
+              "std": 20.570114135742188
+            },
+            "tissue_quality": {
+              "viable_pct": 80.0,
+              "suspect_edema_pct": 20.0,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 710,
+              "tissue_quality_score": 0.8
+            }
+          },
+          {
+            "layer": 11,
+            "zone": "cmj",
+            "n_pixels": 794,
+            "t2star": {
+              "mean": 37.97726058959961,
+              "median": 38.054046630859375,
+              "std": 2.614650011062622
+            },
+            "r2star": {
+              "mean": 26.45922088623047,
+              "median": 26.278411865234375,
+              "std": 1.8628413677215576
+            },
+            "perfusion": {
+              "mean": 159.4150848388672,
+              "median": 159.43463134765625,
+              "std": 19.623266220092773
+            },
+            "tissue_quality": {
+              "viable_pct": 77.07808564231739,
+              "suspect_edema_pct": 22.921914357682617,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 794,
+              "tissue_quality_score": 0.7707808564231738
+            }
+          },
+          {
+            "layer": 12,
+            "zone": "cmj",
+            "n_pixels": 856,
+            "t2star": {
+              "mean": 38.42275619506836,
+              "median": 38.3433723449707,
+              "std": 2.58707332611084
+            },
+            "r2star": {
+              "mean": 26.14533233642578,
+              "median": 26.08012580871582,
+              "std": 1.7776721715927124
+            },
+            "perfusion": {
+              "mean": 149.94631958007812,
+              "median": 149.86151123046875,
+              "std": 20.439722061157227
+            },
+            "tissue_quality": {
+              "viable_pct": 72.66355140186917,
+              "suspect_edema_pct": 27.33644859813084,
+              "likely_necrosis_pct": 0.0,
+              "n_pixels": 856,
+              "tissue_quality_score": 0.7266355140186916
+            }
+          }
+        ],
+        "gradient": {
+          "t2star": {
+            "cortex": 34.35006332397461,
+            "medulla": 38.3433723449707,
+            "gradient": 3.9933090209960938,
+            "abnormal": true
+          },
+          "r2star": {
+            "cortex": 29.112028121948242,
+            "medulla": 26.08012580871582,
+            "gradient": -3.031902313232422
+          },
+          "perfusion": {
+            "cortex": 254.4884033203125,
+            "medulla": 149.86151123046875,
+            "gradient": -104.62689208984375
+          }
+        },
+        "zones": {
+          "outer_cortex": {
+            "zone": "outer_cortex",
+            "n_layers": 5,
+            "t2star": {
+              "mean": 35.195047760009764,
+              "median": 35.417633056640625,
+              "std": 0.5770485198913434
+            },
+            "r2star": {
+              "mean": 28.420757675170897,
+              "median": 28.234529495239258,
+              "std": 0.46773566289900564
+            },
+            "perfusion": {
+              "mean": 232.8828094482422,
+              "median": 231.96450805664062,
+              "std": 14.487537584854417
+            },
+            "tissue_quality": {
+              "viable_pct": 96.22063872059451,
+              "suspect_edema_pct": 3.779361279405493,
+              "likely_necrosis_pct": 0.0
+            },
+            "interpretation": "\u2713 Viable tissue (96% viable)"
+          },
+          "inner_cortex": {
+            "zone": "inner_cortex",
+            "n_layers": 5,
+            "t2star": {
+              "mean": 37.12393569946289,
+              "median": 37.02566909790039,
+              "std": 0.40691598932546874
+            },
+            "r2star": {
+              "mean": 26.940031051635742,
+              "median": 27.008289337158203,
+              "std": 0.2948149939734849
+            },
+            "perfusion": {
+              "mean": 186.8929016113281,
+              "median": 187.2165069580078,
+              "std": 12.900455769329636
+            },
+            "tissue_quality": {
+              "viable_pct": 86.15222829616701,
+              "suspect_edema_pct": 13.84777170383299,
+              "likely_necrosis_pct": 0.0
+            },
+            "interpretation": "Tissue quality: 86% viable, 14% suspect"
+          },
+          "cmj": {
+            "zone": "cmj",
+            "n_layers": 2,
+            "t2star": {
+              "mean": 38.19870948791504,
+              "median": 38.19870948791504,
+              "std": 0.14466285705566406
+            },
+            "r2star": {
+              "mean": 26.179268836975098,
+              "median": 26.179268836975098,
+              "std": 0.09914302825927734
+            },
+            "perfusion": {
+              "mean": 154.6480712890625,
+              "median": 154.6480712890625,
+              "std": 4.78656005859375
+            },
+            "tissue_quality": {
+              "viable_pct": 74.87081852209329,
+              "suspect_edema_pct": 25.129181477906727,
+              "likely_necrosis_pct": 0.0
+            },
+            "interpretation": "\u26a0\ufe0f Tissue stress - 0% necrotic, 25% edematous"
+          }
+        }
+      },
+      "heterogeneity": {
+        "layer_cv": [
+          {
+            "layer": 1,
+            "cv": 7.348987867024377,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 2,
+            "cv": 6.926556127285586,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 3,
+            "cv": 7.447994704235167,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 4,
+            "cv": 7.413193028831924,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 5,
+            "cv": 6.950099122717434,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 6,
+            "cv": 7.434863041008861,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 7,
+            "cv": 7.083291175138284,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 8,
+            "cv": 6.905009446243296,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 9,
+            "cv": 6.9768292653106005,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 10,
+            "cv": 7.223948917153557,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 11,
+            "cv": 6.8847778130123105,
+            "interpretation": "homogeneous"
+          },
+          {
+            "layer": 12,
+            "cv": 6.733179975368077,
+            "interpretation": "homogeneous"
+          }
+        ],
+        "zone_cv": {
+          "cortex": {
+            "mean": 7.17107726949491,
+            "max": 7.447994704235167,
+            "interpretation": "homogeneous"
+          }
+        }
+      }
+    }
+  },
+  "oxygen_responsiveness": {},
+  "cortex_only_statistics": {
+    "air": {
+      "n_layers": 10,
+      "t2star": {
+        "mean": 33.64706306457519,
+        "median": 33.77178382873535,
+        "std": 1.1444663921538853,
+        "min": 31.414657592773438,
+        "max": 35.29820251464844
+      },
+      "r2star": {
+        "mean": 29.75521469116211,
+        "median": 29.611806869506836,
+        "std": 1.02741118119948
+      },
+      "perfusion": {
+        "mean": 209.88785552978516,
+        "median": 209.72925567626953,
+        "std": 26.775420778700422
+      },
+      "tissue_quality": {
+        "mean_viable_pct": 99.07273678641435,
+        "interpretation": "healthy"
+      }
+    },
+    "oxygen1": {
+      "n_layers": 10,
+      "t2star": {
+        "mean": 36.15949172973633,
+        "median": 36.26413154602051,
+        "std": 1.086017946021468,
+        "min": 34.35006332397461,
+        "max": 37.724422454833984
+      },
+      "r2star": {
+        "mean": 27.68039436340332,
+        "median": 27.577360153198242,
+        "std": 0.8372479315716672
+      },
+      "perfusion": {
+        "mean": 209.88785552978516,
+        "median": 209.72925567626953,
+        "std": 26.775420778700422
+      },
+      "tissue_quality": {
+        "mean_viable_pct": 91.18643350838076,
+        "interpretation": "healthy"
+      }
+    }
+  }
+}

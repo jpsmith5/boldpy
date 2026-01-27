@@ -1,0 +1,13 @@
+{
+  "id": "tutorial_sample",
+  "t2star_maps": {
+    "air": "prepared_maps/sample_air_t2star_custom.npy",
+    "oxygen1": "prepared_maps/sample_oxygen1_t2star_custom.npy"
+  },
+  "r2star_maps": {
+    "air": "prepared_maps/sample_air_r2star_custom.npy",
+    "oxygen1": "prepared_maps/sample_oxygen1_r2star_custom.npy"
+  },
+  "perfusion_map": "prepared_maps/sample_perfusion.npy",
+  "mlco_mask": "sample_mlco_layers.npy"
+}

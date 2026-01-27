@@ -1,0 +1,89 @@
+# BoldPy Multi-Region Zone Configuration
+# ========================================
+# Kidney - 2 Regions (Cortex + Medulla combined as one region)
+#
+# Simplified multi-region example with just cortex and medulla
+
+metadata:
+  organ: kidney
+  mode: multi_region
+  description: "Simplified 2-region kidney MLCO (cortex separate, medulla+papilla combined)"
+  species: mouse
+  notes: |
+    Multi-region MLCO encoding: region_id * 1000 + layer_num
+    
+    Region 1 (cortex):  Layers 1-12  → Encoded as 1001-1012
+    Region 2 (medulla): Layers 1-12  → Encoded as 2001-2012
+
+regions:
+  # Region 1: Cortex
+  cortex:
+    region_id: 1
+    n_layers: 12
+    description: "Cortical region from surface to CMJ"
+    
+    zones:
+      outer:
+        layers: [1001, 1002, 1003, 1004]
+        description: "Outer cortex"
+        percentage: 33
+      
+      middle:
+        layers: [1005, 1006, 1007, 1008]
+        description: "Middle cortex"
+        percentage: 33
+      
+      inner:
+        layers: [1009, 1010, 1011, 1012]
+        description: "Inner cortex approaching CMJ"
+        percentage: 33
+    
+    aggregate_zones:
+      full_cortex:
+        layers: [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012]
+        description: "Complete cortical region"
+  
+  # Region 2: Medulla (includes papilla)
+  medulla:
+    region_id: 2
+    n_layers: 12
+    description: "Medullary region from CMJ to papilla tip"
+    
+    zones:
+      outer:
+        layers: [2001, 2002, 2003, 2004]
+        description: "Outer medulla near CMJ"
+        percentage: 33
+      
+      middle:
+        layers: [2005, 2006, 2007, 2008]
+        description: "Middle medulla"
+        percentage: 33
+      
+      inner:
+        layers: [2009, 2010, 2011, 2012]
+        description: "Inner medulla and papilla"
+        percentage: 33
+    
+    aggregate_zones:
+      full_medulla:
+        layers: [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012]
+        description: "Complete medullary region"
+
+# Cross-region aggregates
+cross_region_aggregates:
+  all_outer:
+    layers: [1001, 1002, 1003, 1004, 2001, 2002, 2003, 2004]
+    description: "Outer zones across both regions"
+    regions: [1, 2]
+  
+  all_inner:
+    layers: [1009, 1010, 1011, 1012, 2009, 2010, 2011, 2012]
+    description: "Inner zones across both regions"
+    regions: [1, 2]
+  
+  complete_kidney:
+    layers: [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012,
+             2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012]
+    description: "Complete kidney - all regions"
+    regions: [1, 2]

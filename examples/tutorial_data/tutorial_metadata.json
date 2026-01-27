@@ -1,0 +1,27 @@
+{
+  "description": "Synthetic tutorial kidney data",
+  "dimensions": {
+    "height": 150,
+    "width": 150
+  },
+  "layers": 12,
+  "conditions": [
+    "air",
+    "oxygen1"
+  ],
+  "t2_range_ms": {
+    "air": {
+      "cortex": "30-34",
+      "medulla": "34-38"
+    },
+    "oxygen1": {
+      "cortex": "32-37",
+      "medulla": "36-41"
+    }
+  },
+  "perfusion_range": {
+    "cortex": "230-270",
+    "medulla": "130-170"
+  },
+  "note": "Realistic values based on healthy mouse kidney literature"
+}

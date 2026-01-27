@@ -1,0 +1,42 @@
+# BoldPy Zone Configuration
+# ===========================
+# Heart - 12 layers (single organ)
+#
+# Example configuration showing MLCO analysis for cardiac tissue.
+# Layers progress from epicardium (outer surface) to endocardium (inner surface).
+
+metadata:
+  organ: heart
+  n_layers: 12
+  description: "Cardiac wall MLCO analysis - epicardium to endocardium"
+  reference: "Example configuration for users to adapt"
+  species: mouse
+  notes: |
+    Layer 1 = Epicardium (outer surface)
+    Layer 12 = Endocardium (inner surface)
+    
+    This is a single-organ (non-bilateral) configuration.
+    Adjust layer counts and zones based on your specific application.
+
+# Primary zones
+zones:
+  epicardium:
+    layers: [1, 2, 3]
+    description: "Epicardium - outer cardiac wall"
+    percentage: 25
+  
+  mid_myocardium:
+    layers: [4, 5, 6, 7, 8, 9]
+    description: "Mid-myocardium - bulk of cardiac muscle"
+    percentage: 50
+  
+  endocardium:
+    layers: [10, 11, 12]
+    description: "Endocardium - inner cardiac wall"
+    percentage: 25
+
+# Aggregate zones
+aggregate_zones:
+  full_wall:
+    layers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    description: "Complete cardiac wall"

@@ -1,0 +1,50 @@
+# BoldPy Tissue Viability Thresholds
+# ====================================
+# Mouse Kidney - Default Configuration
+#
+# Based on mouse kidney literature values for T2* and perfusion.
+# Reference: db/m controls (PMID: 20829708)
+
+metadata:
+  species: mouse
+  organ: kidney
+  reference: "PMID: 20829708 (db/m controls)"
+  description: "Normal mouse cortex T2* ~27-37 ms, medulla ~25-35 ms"
+  notes: |
+    These thresholds classify tissue into three categories:
+    - Viable: Normal, healthy tissue
+    - Suspect Edema: Elevated T2*, possible fluid accumulation
+    - Likely Necrosis: Very high T2*, especially with low perfusion
+    
+    Thresholds are region-specific to account for normal physiological
+    differences between cortex, CMJ, and medulla.
+
+# Tissue classification thresholds
+# Each category specifies [min, max] ranges for T2* (ms) and perfusion (ml/100g/min)
+# T2* thresholds can be region-specific
+thresholds:
+  viable:
+    cortex_t2star: [5, 40]      # ms - normal cortical T2*
+    cmj_t2star: [5, 40]         # ms - transition zone
+    medulla_t2star: [5, 40]     # ms - normal medullary T2*
+    perfusion: [150, 400]       # ml/100g/min - normal perfusion
+  
+  suspect_edema:
+    cortex_t2star: [40, 60]     # ms - elevated, possible edema
+    cmj_t2star: [40, 60]        # ms
+    medulla_t2star: [40, 60]    # ms
+    perfusion: [50, 150]        # ml/100g/min - reduced perfusion
+  
+  likely_necrosis:
+    cortex_t2star: [60, 150]    # ms - very high, likely tissue damage
+    cmj_t2star: [60, 150]       # ms
+    medulla_t2star: [60, 150]   # ms
+    perfusion: [0, 50]          # ml/100g/min - severely reduced
+
+# High-confidence classification rules
+# When both T2* and perfusion meet these criteria, confidence is increased
+high_confidence_rules:
+  necrosis:
+    t2star_min: 60              # ms
+    perfusion_max: 50           # ml/100g/min
+    note: "High T2* + low perfusion = high confidence necrosis"

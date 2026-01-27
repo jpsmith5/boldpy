@@ -1,0 +1,188 @@
+# BoldPy Multi-Region Zone Configuration
+# ========================================
+# Kidney - Multi-region MLCO (cortex, medulla, papilla as separate regions)
+#
+# This config works with multi-region MLCO masks where each region has
+# independent MLCO layers with encoding: region_id * 1000 + layer_num
+#
+# Example: Region 2 (medulla), Layer 5 → encoded as 2005
+
+metadata:
+  organ: kidney
+  mode: multi_region
+  description: "Multi-region mouse kidney MLCO with per-region zone analysis"
+  reference: "Based on mouse kidney anatomy with manual region boundaries"
+  species: mouse
+  notes: |
+    Multi-region MLCO encoding: region_id * 1000 + layer_num
+    
+    Right Kidney (anatomical)
+      Region 1 (cortex):  Layers 1-6   → Encoded as 1001-1006
+      Region 2 (medulla): Layers 1-8   → Encoded as 2001-2008
+      Region 3 (papilla): Layers 1-4   → Encoded as 3001-3004
+    
+    Left Kidney (anatomical)
+      Region 4 (cortex):  Layers 1-6   → Encoded as 4001-4006
+      Region 5 (medulla): Layers 1-8   → Encoded as 5001-5008
+      Region 6 (papilla): Layers 1-4   → Encoded as 6001-6004
+    
+    Each region has independent MLCO layers and zones.
+
+# Define each region independently
+regions:
+  # Region 1: Right Cortex
+  right_cortex:
+    region_id: 1
+    n_layers: 6
+    description: "Cortical region - glomeruli-rich, highest perfusion"
+    
+    zones:
+      outer:
+        layers: [1001, 1002, 1003]  # Region 1, layers 1-3
+        description: "Outer cortex - surface to mid-cortex"
+        percentage: 50
+      
+      inner:
+        layers: [1004, 1005, 1006]  # Region 1, layers 4-6
+        description: "Inner cortex - approaching CMJ"
+        percentage: 50
+    
+    aggregate_zones:
+      full_cortex:
+        layers: [1001, 1002, 1003, 1004, 1005, 1006]
+        description: "Complete cortical region"
+  
+  # Region 2: Right Medulla
+  right_medulla:
+    region_id: 2
+    n_layers: 8
+    description: "Medullary region - metabolically active, concentrating mechanism"
+    
+    zones:
+      outer:
+        layers: [2001, 2002, 2003, 2004]  # Region 2, layers 1-4
+        description: "Outer medulla - thick ascending limb dominant"
+        percentage: 50
+      
+      inner:
+        layers: [2005, 2006, 2007, 2008]  # Region 2, layers 5-8
+        description: "Inner medulla - thin limbs, collecting ducts"
+        percentage: 50
+    
+    aggregate_zones:
+      full_medulla:
+        layers: [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008]
+        description: "Complete medullary region"
+  
+  # Region 3: Right Papilla
+  right_papilla:
+    region_id: 3
+    n_layers: 4
+    description: "Papillary region - deepest, collecting duct terminus"
+    
+    zones:
+      outer:
+        layers: [3001, 3002]  # Region 3, layers 1-2
+        description: "Outer papilla"
+        percentage: 50
+      
+      inner:
+        layers: [3003, 3004]  # Region 3, layers 2-4
+        description: "Inner papilla - tip region"
+        percentage: 50
+    
+    aggregate_zones:
+      full_papilla:
+        layers: [3001, 3002, 3003, 3004]
+        description: "Complete papillary region"
+  
+  # Region 4: Left Cortex
+  left_cortex:
+    region_id: 4
+    n_layers: 6
+    description: "Cortical region - glomeruli-rich, highest perfusion"
+    
+    zones:
+      outer:
+        layers: [4001, 4002, 4003]  # Region 4, layers 1-3
+        description: "Outer cortex - surface to mid-cortex"
+        percentage: 50
+      
+      inner:
+        layers: [4004, 4005, 4006]  # Region 4, layers 4-6
+        description: "Inner cortex - approaching CMJ"
+        percentage: 50
+    
+    aggregate_zones:
+      full_cortex:
+        layers: [4001, 4002, 4003, 4004, 4005, 4006]
+        description: "Complete cortical region"
+  
+  # Region 5: Left Medulla
+  left_medulla:
+    region_id: 5
+    n_layers: 8
+    description: "Medullary region - metabolically active, concentrating mechanism"
+    
+    zones:
+      outer:
+        layers: [5001, 5002, 5003, 5004]  # Region 5, layers 1-4
+        description: "Outer medulla - thick ascending limb dominant"
+        percentage: 50
+      
+      inner:
+        layers: [5005, 5006, 5007, 5008]  # Region 5, layers 5-8
+        description: "Inner medulla - thin limbs, collecting ducts"
+        percentage: 50
+    
+    aggregate_zones:
+      full_medulla:
+        layers: [5001, 5002, 5003, 5004, 5005, 5006, 5007, 5008]
+        description: "Complete medullary region"
+  
+  # Region 6: Left Papilla
+  left_papilla:
+    region_id: 6
+    n_layers: 4
+    description: "Papillary region - deepest, collecting duct terminus"
+    
+    zones:
+      outer:
+        layers: [6001, 6002]  # Region 6, layers 1-2
+        description: "Outer papilla"
+        percentage: 50
+      
+      inner:
+        layers: [6003, 6004]  # Region 6, layers 2-4
+        description: "Inner papilla - tip region"
+        percentage: 50
+    
+    aggregate_zones:
+      full_papilla:
+        layers: [6001, 6002, 6003, 6004]
+        description: "Complete papillary region"
+  
+# Cross-region aggregate zones (optional)
+# Combine zones across multiple regions for comparative analysis
+cross_region_aggregates:
+  all_outer_zones:
+    layers: [1001, 1002, 1003, 2001, 2002, 2003, 2004, 3001, 3002,
+             4001, 4002, 4003, 5001, 5002, 5003, 5004, 6001, 6002]
+    description: "All outer zones across cortex, medulla, and papilla"
+    regions: [1, 2, 3, 4, 5, 6]
+  
+  all_inner_zones:
+    layers: [1004, 1005, 1006, 2005, 2006, 2007, 2008, 3003, 3004,
+             4004, 4005, 4006, 5005, 5006, 5007, 5008, 6003, 6004]
+    description: "All inner zones across cortex, medulla, and papilla"
+    regions: [1, 2, 3, 4, 5, 6]
+  
+  complete_kidney:
+    layers: [1001, 1002, 1003, 1004, 1005, 1006,
+             2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+             3001, 3002, 3003, 3004,
+             4001, 4002, 4003, 4004, 4005, 4006,
+             5001, 5002, 5003, 5004, 5005, 5006, 5007, 5008,
+             6001, 6002, 6003, 6004]
+    description: "Complete kidney - all regions and layers"
+    regions: [1, 2, 3, 4, 5, 6]

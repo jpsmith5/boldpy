@@ -1,0 +1,59 @@
+site_name: BoldPy v2.1.1 Documentation
+site_description: Tissue-Agnostic BOLD MRI Analysis Framework with MLCO
+site_author: BoldPy Development Team
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  language: en
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - footnotes
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Quick Start: quick-start.md
+  - Installation: installation.md
+  - User Guide: user-guide.md
+  - Scripts Reference: scripts-reference.md
+  - Metrics Documentation: metrics-documentation.md
+  - Examples with Data: examples-with-data.md
+  - Changelog: ../CHANGELOG.md
+
+copyright: Copyright &copy; 2025-2026 BoldPy Development Team

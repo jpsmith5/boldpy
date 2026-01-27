@@ -1,0 +1,66 @@
+# BoldPy Zone Configuration
+# ===========================
+# Kidney - 24 layers per organ (bilateral analysis)
+#
+# This is the reference implementation for mouse kidney MLCO analysis.
+# Layers progress from cortex (surface) to papilla (center).
+
+metadata:
+  organ: kidney
+  n_layers: 24
+  description: "Standard mouse kidney MLCO with 5-zone regional analysis"
+  reference: "Based on mouse kidney anatomy"
+  species: mouse
+  notes: |
+    Layer 1 = Outer cortex (surface)
+    Layer 24 = Papilla (center)
+    
+    For bilateral kidneys, layers are duplicated:
+    - Left kidney: layers 1-24
+    - Right kidney: layers 25-48
+
+# Primary anatomical zones
+# Each zone must specify:
+# - layers: list of layer numbers (1-indexed)
+# - description: anatomical/functional description
+# - percentage: approximate percentage of total kidney volume
+zones:
+  outer_cortex:
+    layers: [1, 2, 3, 4, 5]
+    description: "Outer cortex - glomeruli-rich, highest perfusion"
+    percentage: 21
+  
+  inner_cortex:
+    layers: [6, 7, 8, 9, 10]
+    description: "Inner cortex - transitioning region"
+    percentage: 21
+  
+  cmj:
+    layers: [11, 12, 13]
+    description: "Corticomedullary junction - transition zone"
+    percentage: 13
+  
+  outer_medulla:
+    layers: [14, 15, 16, 17, 18, 19]
+    description: "Outer medulla - thick ascending limb, metabolically active"
+    percentage: 25
+  
+  inner_medulla:
+    layers: [20, 21, 22, 23, 24]
+    description: "Inner medulla - deepest region, normally hypoxic"
+    percentage: 21
+
+# Aggregate zones (optional)
+# Combine multiple primary zones for higher-level analysis
+aggregate_zones:
+  total_cortex:
+    layers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    description: "All cortical layers"
+  
+  total_medulla:
+    layers: [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+    description: "All medullary layers"
+  
+  all_zones:
+    layers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+    description: "Complete kidney"

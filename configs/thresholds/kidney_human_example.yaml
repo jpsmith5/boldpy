@@ -1,0 +1,63 @@
+# BoldPy Tissue Viability Thresholds
+# ====================================
+# Human Kidney - Example Configuration
+#
+# This is an EXAMPLE configuration showing how to adapt thresholds for human kidneys.
+# IMPORTANT: These values are illustrative. Consult literature for your specific
+# field strength, sequence parameters, and clinical context.
+
+metadata:
+  species: human
+  organ: kidney
+  reference: "Example - consult literature for actual values"
+  description: "Illustrative thresholds for human kidney at 3T"
+  notes: |
+    Human kidney T2* values differ from mouse due to:
+    - Different field strength (typically 1.5T or 3T vs 7T-11T in mice)
+    - Species-specific physiology
+    - Different sequence parameters
+    
+    ALWAYS validate thresholds against published literature for your
+    specific imaging protocol and clinical population.
+    
+    Example references to consult:
+    - PMID: 20301612 (BOLD MRI in diabetic nephropathy)
+    - PMID: 23001823 (Renal BOLD MRI review)
+
+# Example thresholds (ADJUST BASED ON YOUR PROTOCOL)
+thresholds:
+  viable:
+    cortex_t2star: [20, 50]     # ms - example range for 3T
+    cmj_t2star: [20, 50]        # ms
+    medulla_t2star: [15, 45]    # ms - medulla typically lower than cortex
+    perfusion: [200, 500]       # ml/100g/min - higher baseline in humans
+  
+  suspect_edema:
+    cortex_t2star: [50, 70]     # ms
+    cmj_t2star: [50, 70]        # ms
+    medulla_t2star: [45, 65]    # ms
+    perfusion: [100, 200]       # ml/100g/min
+  
+  likely_necrosis:
+    cortex_t2star: [70, 150]    # ms
+    cmj_t2star: [70, 150]       # ms
+    medulla_t2star: [65, 150]   # ms
+    perfusion: [0, 100]         # ml/100g/min
+
+# High-confidence rules
+high_confidence_rules:
+  necrosis:
+    t2star_min: 70              # ms - adjust based on your data
+    perfusion_max: 100          # ml/100g/min
+    note: "Values are examples - validate with your data"
+
+# Additional notes for human applications
+clinical_notes: |
+  For clinical applications, consider:
+  1. Patient-specific factors (age, comorbidities, medications)
+  2. Field strength differences (1.5T vs 3T)
+  3. Sequence parameter variations
+  4. Reference ranges from healthy controls in your population
+  5. Disease-specific threshold adjustments
+  
+  Consult with radiology colleagues and literature before finalizing thresholds.

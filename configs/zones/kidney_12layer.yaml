@@ -1,0 +1,43 @@
+# BoldPy Zone Configuration
+# ===========================
+# Kidney - 12 layers per organ (bilateral analysis)
+#
+# Lower resolution alternative for faster analysis or smaller kidneys.
+# Layers progress from cortex (surface) to papilla (center).
+
+metadata:
+  organ: kidney
+  n_layers: 12
+  description: "Lower-resolution kidney MLCO with 3-zone regional analysis"
+  reference: "Simplified kidney anatomy"
+  species: mouse
+  notes: |
+    Layer 1 = Outer cortex (surface)
+    Layer 12 = Papilla (center)
+    
+    For bilateral kidneys, layers are duplicated:
+    - Left kidney: layers 1-12
+    - Right kidney: layers 13-24
+
+# Primary anatomical zones
+zones:
+  cortex:
+    layers: [1, 2, 3, 4, 5]
+    description: "Cortex - glomeruli-rich region"
+    percentage: 42
+  
+  cmj:
+    layers: [6, 7]
+    description: "Corticomedullary junction"
+    percentage: 17
+  
+  medulla:
+    layers: [8, 9, 10, 11, 12]
+    description: "Medulla - collecting ducts, normally hypoxic"
+    percentage: 42
+
+# Aggregate zones
+aggregate_zones:
+  all_zones:
+    layers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    description: "Complete kidney"

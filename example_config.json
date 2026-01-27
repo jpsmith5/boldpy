@@ -1,0 +1,10 @@
+{
+  "id": "M1_WT",
+  "bold_scans": {
+    "air": "/absolute/path/to/data/M1/air_breathing.PvDatasets",
+    "oxygen_1": "/absolute/path/to/data/M1/oxygen_breathing_1.PvDatasets",
+    "oxygen_2": "/absolute/path/to/data/M1/oxygen_breathing_2.PvDatasets"
+  },
+  "perfusion": "/absolute/path/to/data/M1/perfusion_scan.PvDatasets",
+  "mlco_mask": "/absolute/path/to/masks/M1_mlco_mask_24layers.npy"
+}
