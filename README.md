@@ -70,13 +70,13 @@ See [CHANGELOG.md](CHANGELOG.md) for complete details.
 ## Example Output
 
 ### Layer Profiles
-![MLCO Profiles](docs/images/example_profiles.png)
+![MLCO Profiles](docs/example_outputs/M1_WT_tlco_profiles.png)
 
 ### Perfusion Integration
-![Perfusion Analysis](docs/images/example_perfusion.png)
+![Perfusion Analysis](docs/example_outputs/M1_WT_perfusion_profile.png)
 
 ### Group Comparison
-![Group Comparison](docs/images/example_comparison.png)
+![Group Comparison](docs/example_outputs/WT_vs_KO_air_tlco_comparison.png)
 
 *(Example images - see uploads folder for actual outputs)*
 
