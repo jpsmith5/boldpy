@@ -80,7 +80,8 @@ def _analyze_mlco_single_organ(
     n_layers: int = 24,
     tissue_mask: Optional[np.ndarray] = None,
     perfusion_map: Optional[np.ndarray] = None,
-    organ_label: str = "kidney"
+    organ_label: str = "kidney",
+    zone_config: Optional[Dict] = None
 ) -> Dict:
     """
     Enhanced MLCO analysis with 24 layers and tissue quality assessment
@@ -151,7 +152,7 @@ def _analyze_mlco_single_organ(
         layer_stats = {
             'layer': layer_idx,
             'layer_number': layer_num,
-            'zone': get_zone_name(layer_idx),
+            'zone': get_zone_name(layer_idx, zone_config=zone_config),
             'n_pixels': int(n_pixels),
             't2star': {
                 'mean': float(np.mean(t2_values)),
@@ -356,7 +357,8 @@ def _analyze_mlco_bilateral(
     n_layers_per_organ: int = 24,
     tissue_mask: Optional[np.ndarray] = None,
     perfusion_map: Optional[np.ndarray] = None,
-    scan_label: str = "scan"
+    scan_label: str = "scan",
+    zone_config: Optional[Dict] = None
 ) -> Dict:
     """
     Enhanced bilateral MLCO analysis with 5-zone breakdown
@@ -394,9 +396,10 @@ def _analyze_mlco_bilateral(
         n_layers=n_layers_per_organ,
         tissue_mask=tissue_mask,
         perfusion_map=perfusion_map,
-        organ_label="Right Kidney (Anatomical)"
+        organ_label="Right Kidney (Anatomical)",
+        zone_config=zone_config
     )
-    
+
     # Analyze left kidney
     left_results = _analyze_mlco_single_organ(
         t2_map, r2_map, mlco_mask,
@@ -404,17 +407,19 @@ def _analyze_mlco_bilateral(
         n_layers=n_layers_per_organ,
         tissue_mask=tissue_mask,
         perfusion_map=perfusion_map,
-        organ_label="Left Kidney (Anatomical)"
+        organ_label="Left Kidney (Anatomical)",
+        zone_config=zone_config
     )
     
-    # Calculate 5-zone statistics for each kidney
+    # Calculate zone statistics for each kidney
+    n_zones = len(tissue_zones.ZONE_DEFINITIONS)
     print(f"\n{'─'*70}")
-    print("5-ZONE REGIONAL ANALYSIS")
+    print(f"{n_zones}-ZONE REGIONAL ANALYSIS")
     print(f"{'─'*70}")
-    
+
     right_zones = {}
     left_zones = {}
-    
+
     for zone_name in tissue_zones.ZONE_DEFINITIONS.keys():
         right_zone = calculate_zone_statistics(right_results['layers'], zone_name)
         left_zone = calculate_zone_statistics(left_results['layers'], zone_name)
@@ -464,7 +469,7 @@ def _analyze_mlco_bilateral(
         
         layer_stats = {
             'layer': layer_idx,
-            'zone': get_zone_name(layer_idx),
+            'zone': get_zone_name(layer_idx, zone_config=zone_config),
             'n_pixels': int(n_pixels),
             't2star': {
                 'mean': float(np.mean(t2_values)),
@@ -1009,9 +1014,10 @@ def analyze_mlco(
             n_layers_per_organ=n_layers_per_organ,  # Legacy parameter name
             tissue_mask=tissue_mask,
             perfusion_map=perfusion_map,
-            scan_label=scan_label
+            scan_label=scan_label,
+            zone_config=zone_config
         )
-    
+
     else:  # analysis_mode == 'single'
         # Determine starting layer based on side
         if side == 'right':
@@ -1020,7 +1026,7 @@ def analyze_mlco(
         else:  # side == 'left'
             start_layer = n_layers_per_organ + 1
             organ_label = "Left Organ"
-        
+
         return _analyze_mlco_single_organ(
             t2_map=t2_map,
             r2_map=r2_map,
@@ -1029,7 +1035,8 @@ def analyze_mlco(
             n_layers=n_layers_per_organ,
             tissue_mask=tissue_mask,
             perfusion_map=perfusion_map,
-            organ_label=organ_label
+            organ_label=organ_label,
+            zone_config=zone_config
         )
 
 

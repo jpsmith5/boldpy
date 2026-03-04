@@ -317,12 +317,22 @@ def calculate_oxygen_responsiveness(conditions_data: dict) -> dict:
             'responsive': abs(delta_t2) > 1  # >1ms change considered responsive
         })
     
-    # Zonal responsiveness
-    zones = {
-        'cortex': range(1, 11),
-        'medulla': range(14, 25)
-    }
-    
+    # Zonal responsiveness — use dynamic zone config from tissue_zones
+    try:
+        from tissue_zones import ZONE_CONFIG, AGGREGATE_ZONES
+        if AGGREGATE_ZONES:
+            # Use aggregate zones (total_cortex, total_medulla) if available
+            zones = {name: layers for name, layers in AGGREGATE_ZONES.items()
+                     if name != 'all_zones'}
+        else:
+            # Fall back to primary zones from config
+            zones = {name: info['layers'] for name, info in ZONE_CONFIG['zones'].items()}
+    except ImportError:
+        zones = {
+            'cortex': range(1, 11),
+            'medulla': range(14, 25)
+        }
+
     zone_response = {}
     for zone_name, zone_range in zones.items():
         zone_responses = [r for r in responses if r['layer'] in zone_range]
@@ -343,39 +353,56 @@ def calculate_oxygen_responsiveness(conditions_data: dict) -> dict:
     }
 
 
-def extract_cortex_only_statistics(results: dict) -> dict:
+def extract_superficial_zone_statistics(results: dict) -> dict:
     """
-    Extract cortex-only (layers 1-10) statistics
-    
+    Extract statistics for the most superficial zone.
+
+    Resolves the superficial layers from aggregate zones using positional
+    logic: 'total_superficial' (clustered configs) or 'total_cortex'
+    (hardcoded anatomical configs), falling back to the first zone in
+    ZONE_CONFIG.
+
     Parameters:
     -----------
     results : dict
         Full MLCO results
-    
+
     Returns:
     --------
-    cortex_stats : dict
-        Cortex-only statistics
+    superficial_stats : dict
+        Superficial-zone statistics
     """
-    cortex_layers = range(1, 11)
+    # Determine superficial layers dynamically from zone config
+    try:
+        from tissue_zones import AGGREGATE_ZONES, ZONE_CONFIG
+        if 'total_superficial' in AGGREGATE_ZONES:
+            superficial_layers = AGGREGATE_ZONES['total_superficial']
+        elif 'total_cortex' in AGGREGATE_ZONES:
+            superficial_layers = AGGREGATE_ZONES['total_cortex']
+        else:
+            # Use the first zone (shallowest)
+            first_zone = next(iter(ZONE_CONFIG['zones'].values()))
+            superficial_layers = first_zone['layers']
+    except (ImportError, StopIteration):
+        superficial_layers = range(1, 11)
     
-    cortex_stats = {}
-    
+    superficial_stats = {}
+
     for condition, condition_data in results.items():
         bilateral = condition_data['bilateral']
-        
-        # Filter cortex layers
-        cortex_layer_data = [l for l in bilateral['layers'] if l['layer'] in cortex_layers]
-        
-        if not cortex_layer_data:
+
+        # Filter to superficial zone layers
+        zone_layer_data = [l for l in bilateral['layers'] if l['layer'] in superficial_layers]
+
+        if not zone_layer_data:
             continue
-        
+
         # Calculate statistics
-        t2_values = [l['t2star']['median'] for l in cortex_layer_data]
-        r2_values = [l['r2star']['median'] for l in cortex_layer_data]
-        
+        t2_values = [l['t2star']['median'] for l in zone_layer_data]
+        r2_values = [l['r2star']['median'] for l in zone_layer_data]
+
         stats = {
-            'n_layers': len(cortex_layer_data),
+            'n_layers': len(zone_layer_data),
             't2star': {
                 'mean': float(np.mean(t2_values)),
                 'median': float(np.median(t2_values)),
@@ -389,35 +416,36 @@ def extract_cortex_only_statistics(results: dict) -> dict:
                 'std': float(np.std(r2_values))
             }
         }
-        
+
         # Add perfusion if available
-        if 'perfusion' in cortex_layer_data[0]:
-            perf_values = [l['perfusion']['median'] for l in cortex_layer_data if 'perfusion' in l]
+        if 'perfusion' in zone_layer_data[0]:
+            perf_values = [l['perfusion']['median'] for l in zone_layer_data if 'perfusion' in l]
             if perf_values:
                 stats['perfusion'] = {
                     'mean': float(np.mean(perf_values)),
                     'median': float(np.median(perf_values)),
                     'std': float(np.std(perf_values))
                 }
-        
+
         # Tissue quality
-        viable_pcts = [l['tissue_quality']['viable_pct'] for l in cortex_layer_data]
+        viable_pcts = [l['tissue_quality']['viable_pct'] for l in zone_layer_data]
         stats['tissue_quality'] = {
             'mean_viable_pct': float(np.mean(viable_pcts)),
             'interpretation': 'healthy' if np.mean(viable_pcts) > 90 else
                             'mild_damage' if np.mean(viable_pcts) > 75 else
                             'moderate_damage'
         }
-        
-        cortex_stats[condition] = stats
-    
-    return cortex_stats
+
+        superficial_stats[condition] = stats
+
+    return superficial_stats
 
 
-def analyze_sample(data: dict, n_layers: int = 24, output_dir: Path = None):
+def analyze_sample(data: dict, n_layers: int = 24, output_dir: Path = None,
+                   cluster_args: dict = None, zone_config_override: dict = None):
     """
     Complete analysis for one sample
-    
+
     Parameters:
     -----------
     data : dict
@@ -426,19 +454,114 @@ def analyze_sample(data: dict, n_layers: int = 24, output_dir: Path = None):
         Number of layers per organ
     output_dir : Path
         Output directory
-    
+    cluster_args : dict, optional
+        If provided, enables k-means clustering for zone boundaries.
+        Keys: n_clusters (int), method (str), condition (str or None),
+              save_config_path (Path or None).
+    zone_config_override : dict, optional
+        If provided, apply these zone boundaries directly (Workflow A:
+        shared reference). Skips clustering. Must be a valid zone config
+        dict (same format as load_zone_config() output).
+
     Returns:
     --------
     results : dict
-        Complete analysis results
+        Complete analysis results (includes 'zone_config' key)
     """
     sample_id = data['id']
     mlco_mask = data['mlco_mask']
-    
+
     print(f"\n{'='*70}")
     print(f"Analyzing: {sample_id}")
     print(f"{'='*70}")
-    
+
+    # --- Workflow A: Apply shared reference zone boundaries ---
+    if zone_config_override is not None:
+        from tissue_zones import update_configs_from_dict
+        print(f"\n  Applying shared reference zone config (Workflow A)")
+        update_configs_from_dict(zone_config_override)
+        for zname, zinfo in zone_config_override['zones'].items():
+            print(f"    {zname}: layers {zinfo['layers']}")
+        print(f"  Zone config applied for downstream analysis.")
+
+    # --- Workflow B / default: K-means clustering for data-driven zone boundaries ---
+    elif cluster_args is not None:
+        try:
+            from cluster_zones import cluster_and_build_zones, compare_zone_configs, plot_clustering_diagnostics
+            from tissue_zones import update_configs_from_dict, ZONE_CONFIG
+
+            # Pick condition to cluster on
+            condition_name = cluster_args.get('condition')
+            if condition_name is None:
+                condition_name = next(iter(data['scans']))
+
+            if condition_name not in data['scans']:
+                print(f"  WARNING: Cluster condition '{condition_name}' not found. "
+                      f"Using '{next(iter(data['scans']))}'.")
+                condition_name = next(iter(data['scans']))
+
+            scan_data = data['scans'][condition_name]
+            print(f"\n  Running k-means clustering on condition: {condition_name}")
+            print(f"  Clusters: {cluster_args.get('n_clusters', 3)}, "
+                  f"Method: {cluster_args.get('method', 'kmeans')}")
+
+            zone_config, diagnostics = cluster_and_build_zones(
+                t2_map=scan_data['t2_map'],
+                r2_map=scan_data['r2_map'],
+                mlco_mask=mlco_mask,
+                n_layers=n_layers,
+                n_clusters=cluster_args.get('n_clusters', 3),
+                method=cluster_args.get('method', 'kmeans'),
+                perfusion_map=data.get('perfusion_map'),
+            )
+
+            sil = zone_config['metadata'].get('silhouette_score', 0)
+            print(f"  Silhouette score: {sil:.3f}")
+
+            # Show zone assignments
+            for zname, zlayers in zone_config['zones'].items():
+                print(f"    {zname}: layers {zlayers['layers']}")
+
+            # Compare with reference config
+            ref_config = ZONE_CONFIG
+            comparison = compare_zone_configs(zone_config, ref_config)
+            print(f"\n  Zone comparison vs reference:")
+            for zname, info in comparison.items():
+                print(f"    {zname}: Jaccard={info['jaccard']:.2f}, "
+                      f"shift={info.get('boundary_shift', {})}")
+
+            # Inject into module globals so all downstream code uses new zones
+            update_configs_from_dict(zone_config)
+            print(f"  Zone config updated for downstream analysis.")
+
+            # Save diagnostic plot
+            if output_dir is not None:
+                diag_path = output_dir / f"{sample_id}_cluster_diagnostics.png"
+                cluster_info = diagnostics['cluster_info']
+                plot_clustering_diagnostics(
+                    layer_features=diagnostics['layer_features'],
+                    labels=cluster_info['labels'],
+                    assignments=diagnostics['tissue_assignments'],
+                    centroids=cluster_info['centroids'],
+                    feature_names=cluster_info['feature_names'],
+                    reference_config=ref_config,
+                    output_path=diag_path,
+                )
+
+            # Save cluster config as YAML if requested
+            save_path = cluster_args.get('save_config_path')
+            if save_path is not None:
+                import yaml
+                save_path = Path(save_path)
+                with open(save_path, 'w') as f:
+                    yaml.dump(zone_config, f, default_flow_style=False, sort_keys=False)
+                print(f"  Saved cluster config: {save_path}")
+
+        except ImportError as e:
+            print(f"  WARNING: Clustering unavailable ({e}). Using default zone config.")
+        except Exception as e:
+            print(f"  WARNING: Clustering failed ({e}). Using default zone config.")
+
     # Analyze each condition
     condition_results = {}
     
@@ -487,7 +610,7 @@ def analyze_sample(data: dict, n_layers: int = 24, output_dir: Path = None):
     # Calculate oxygen responsiveness (compare conditions)
     # Only for standard format - multi-region needs different implementation
     oxygen_response = None
-    cortex_stats = None
+    superficial_stats = None
     
     # Check if any condition is multi-region
     is_multi_region = any(
@@ -499,12 +622,12 @@ def analyze_sample(data: dict, n_layers: int = 24, output_dir: Path = None):
         print(f"\nCalculating oxygen responsiveness...")
         oxygen_response = calculate_oxygen_responsiveness(condition_results)
         
-        # Extract cortex-only statistics
-        print(f"\nExtracting cortex-only statistics...")
-        cortex_stats = extract_cortex_only_statistics(condition_results)
+        # Extract superficial zone statistics
+        print(f"\nExtracting superficial zone statistics...")
+        superficial_stats = extract_superficial_zone_statistics(condition_results)
     else:
         print(f"\nSkipping oxygen responsiveness (multi-region mode)")
-        print(f"Skipping cortex-only statistics (multi-region mode)")
+        print(f"Skipping superficial zone statistics (multi-region mode)")
     
     # Compile complete results
     complete_results = {
@@ -513,12 +636,31 @@ def analyze_sample(data: dict, n_layers: int = 24, output_dir: Path = None):
         'analysis_date': datetime.now().isoformat(),
         'conditions': condition_results
     }
-    
+
+    # Store the active zone config so downstream comparison can detect boundaries
+    try:
+        from tissue_zones import ZONE_CONFIG
+        # Deep copy the config to avoid mutation — convert ranges to lists for JSON
+        import copy
+        stored_zc = copy.deepcopy(ZONE_CONFIG)
+        # Ensure layers are plain lists (not range objects) for JSON serialization
+        if 'zones' in stored_zc:
+            for zinfo in stored_zc['zones'].values():
+                if 'layers' in zinfo and not isinstance(zinfo['layers'], list):
+                    zinfo['layers'] = list(zinfo['layers'])
+        if 'aggregate_zones' in stored_zc:
+            for ainfo in stored_zc['aggregate_zones'].values():
+                if 'layers' in ainfo and not isinstance(ainfo['layers'], list):
+                    ainfo['layers'] = list(ainfo['layers'])
+        complete_results['zone_config'] = stored_zc
+    except ImportError:
+        pass
+
     # Add optional metrics if calculated
     if oxygen_response is not None:
         complete_results['oxygen_responsiveness'] = oxygen_response
-    if cortex_stats is not None:
-        complete_results['cortex_only_statistics'] = cortex_stats
+    if superficial_stats is not None:
+        complete_results['superficial_zone_statistics'] = superficial_stats
     
     # Generate plots if output directory specified
     if output_dir and not is_multi_region:
@@ -626,7 +768,8 @@ def analyze_sample(data: dict, n_layers: int = 24, output_dir: Path = None):
                         actual = len(actual_layers)
                         
                         # Check which layers exist
-                        existing_layers = [layer['layer_number'] for layer in actual_layers]
+                        # Use get() with index fallback for compatibility with averaged data
+                        existing_layers = [layer.get('layer_number', idx+1) for idx, layer in enumerate(actual_layers)]
                         missing_layers = [i for i in range(1, n_layers + 1) if i not in existing_layers]
                         
                         status = "✓" if actual == n_layers else f"⚠ missing {len(missing_layers)} layer(s)"
@@ -669,10 +812,37 @@ def analyze_sample(data: dict, n_layers: int = 24, output_dir: Path = None):
     return complete_results
 
 
+def _zone_boundaries_match(zc1: dict, zc2: dict) -> bool:
+    """
+    Check whether two zone configs have identical zone-to-layer mappings.
+
+    Returns True if both are None (no clustering), or both have the same
+    zone names with the same layer sets. Returns False otherwise.
+    """
+    if zc1 is None and zc2 is None:
+        return True
+    if zc1 is None or zc2 is None:
+        return False
+
+    zones1 = zc1.get('zones', {})
+    zones2 = zc2.get('zones', {})
+
+    if set(zones1.keys()) != set(zones2.keys()):
+        return False
+
+    for zname in zones1:
+        layers1 = set(zones1[zname].get('layers', []))
+        layers2 = set(zones2[zname].get('layers', []))
+        if layers1 != layers2:
+            return False
+
+    return True
+
+
 def compare_groups(group1_results: dict, group2_results: dict, output_dir: Path):
     """
     Compare group 1 vs group 2 with enhanced statistics
-    
+
     Parameters:
     -----------
     group1_results : dict
@@ -685,29 +855,64 @@ def compare_groups(group1_results: dict, group2_results: dict, output_dir: Path)
     print(f"\n{'='*70}")
     print(f"Comparing {group1_results['sample_id']} vs {group2_results['sample_id']}")
     print(f"{'='*70}")
-    
-    # Check if both groups have cortex_only_statistics (not available in multi-region mode)
-    has_cortex_stats = (
-        'cortex_only_statistics' in group1_results and 
-        'cortex_only_statistics' in group2_results and
-        group1_results['cortex_only_statistics'] is not None and
-        group2_results['cortex_only_statistics'] is not None
+
+    # --- Zone boundary compatibility detection ---
+    g1_zc = group1_results.get('zone_config')
+    g2_zc = group2_results.get('zone_config')
+    boundaries_match = _zone_boundaries_match(g1_zc, g2_zc)
+    boundary_comparison = None
+
+    if g1_zc is not None and g2_zc is not None:
+        if boundaries_match:
+            print("\nZone boundaries: MATCH (Workflow A — shared reference)")
+            print("  Zone-level statistics are directly comparable.")
+        else:
+            print("\nZone boundaries: DIFFER (Workflow B — per-sample clustering)")
+            print("  Zone-level stats are NOT directly comparable.")
+            print("  Computing boundary comparison instead...")
+            try:
+                from cluster_zones import compare_zone_configs
+                boundary_comparison = compare_zone_configs(g1_zc, g2_zc)
+                print(f"\n  {'Zone':<20s} {'Jaccard':>8s} {'Lower shift':>12s} {'Upper shift':>12s}")
+                print(f"  {'-'*52}")
+                for zname, info in boundary_comparison.items():
+                    jac = f"{info['jaccard']:.2f}"
+                    lower = info.get('boundary_shift', {}).get('lower', '-')
+                    upper = info.get('boundary_shift', {}).get('upper', '-')
+                    lower_str = f"{lower:+d}" if isinstance(lower, int) else str(lower)
+                    upper_str = f"{upper:+d}" if isinstance(upper, int) else str(upper)
+                    print(f"  {zname:<20s} {jac:>8s} {lower_str:>12s} {upper_str:>12s}")
+            except ImportError:
+                print("  WARNING: cluster_zones not available for boundary comparison")
+
+    # Check if both groups have superficial zone statistics (not available in multi-region mode)
+    # Support both new ('superficial_zone_statistics') and legacy ('cortex_only_statistics') keys
+    sup_key_1 = 'superficial_zone_statistics' if 'superficial_zone_statistics' in group1_results else 'cortex_only_statistics'
+    sup_key_2 = 'superficial_zone_statistics' if 'superficial_zone_statistics' in group2_results else 'cortex_only_statistics'
+    has_superficial_stats = (
+        sup_key_1 in group1_results and
+        sup_key_2 in group2_results and
+        group1_results[sup_key_1] is not None and
+        group2_results[sup_key_2] is not None
     )
-    
+
     comparison = {
         'group1_id': group1_results['sample_id'],
         'group2_id': group2_results['sample_id'],
-        'cortex_comparison': {},
+        'boundaries_match': boundaries_match,
+        'superficial_zone_comparison': {},
         'full_organ_comparison': {},
         'tissue_quality_comparison': {}
     }
-    
-    # Compare cortex-only statistics (if available - not in multi-region mode)
-    if has_cortex_stats:
-        for condition in group1_results['cortex_only_statistics'].keys():
-            if condition in group2_results['cortex_only_statistics']:
-                g1_cortex = group1_results['cortex_only_statistics'][condition]
-                g2_cortex = group2_results['cortex_only_statistics'][condition]
+    if boundary_comparison is not None:
+        comparison['boundary_comparison'] = boundary_comparison
+
+    # Compare superficial zone statistics (if available - not in multi-region mode)
+    if has_superficial_stats:
+        for condition in group1_results[sup_key_1].keys():
+            if condition in group2_results[sup_key_2]:
+                g1_cortex = group1_results[sup_key_1][condition]
+                g2_cortex = group2_results[sup_key_2][condition]
                 
                 # T2* comparison
                 g1_t2 = g1_cortex['t2star']['mean']
@@ -720,7 +925,7 @@ def compare_groups(group1_results: dict, group2_results: dict, output_dir: Path)
                     g2_t2, g2_cortex['t2star']['std']
                 )
                 
-                comparison['cortex_comparison'][condition] = {
+                comparison['superficial_zone_comparison'][condition] = {
                     't2star': {
                         'group1_mean': g1_t2,
                         'group2_mean': g2_t2,
@@ -740,7 +945,7 @@ def compare_groups(group1_results: dict, group2_results: dict, output_dir: Path)
                     delta_perf = g2_perf - g1_perf
                     pct_change_perf = (delta_perf / g1_perf) * 100
                     
-                    comparison['cortex_comparison'][condition]['perfusion'] = {
+                    comparison['superficial_zone_comparison'][condition]['perfusion'] = {
                         'group1_mean': g1_perf,
                         'group2_mean': g2_perf,
                         'delta': delta_perf,
@@ -754,8 +959,8 @@ def compare_groups(group1_results: dict, group2_results: dict, output_dir: Path)
                 print(f"\n{condition.upper()} - Cortex Comparison:")
                 print(f"  T2*:       Group1={g1_t2:.1f}ms, Group2={g2_t2:.1f}ms, Δ={delta_t2:+.1f}ms ({pct_change:+.0f}%)")
                 print(f"  Effect size: {effect_size:.2f}")
-                if 'perfusion' in comparison['cortex_comparison'][condition]:
-                    perf_comp = comparison['cortex_comparison'][condition]['perfusion']
+                if 'perfusion' in comparison['superficial_zone_comparison'][condition]:
+                    perf_comp = comparison['superficial_zone_comparison'][condition]['perfusion']
                     print(f"  Perfusion: Group1={perf_comp['group1_mean']:.0f}, Group2={perf_comp['group2_mean']:.0f}, "
                           f"Δ={perf_comp['delta']:+.0f} ({perf_comp['percent_change']:+.0f}%)")
     else:
@@ -789,7 +994,9 @@ def compare_groups(group1_results: dict, group2_results: dict, output_dir: Path)
                     wt_results=g1_condition_data,  # plot function still uses wt/ko parameter names
                     ko_results=g2_condition_data,
                     condition=condition,
-                    output_path=comparison_plot_path
+                    output_path=comparison_plot_path,
+                    wt_zone_config=g1_zc,
+                    ko_zone_config=g2_zc
                 )
                 print(f"  ✓ Saved comparison plot: {comparison_plot_path.name}.*")
     else:
@@ -951,9 +1158,45 @@ Note: Use prepare_data.py to generate t2star_maps, r2star_maps, and perfusion_ma
     parser.add_argument('--zone-config', type=Path, help='Zone configuration YAML (default: configs/zones/kidney_24layer.yaml)')
     parser.add_argument('--threshold-config', type=Path, help='Threshold configuration YAML (default: configs/thresholds/kidney_mouse_default.yaml)')
     parser.add_argument('--output-dir', type=Path, required=True, help='Output directory')
-    
+
+    # K-means clustering for data-driven zone boundaries
+    cluster_group = parser.add_argument_group(
+        'clustering', 'Data-driven zone boundaries via k-means clustering'
+    )
+    cluster_group.add_argument(
+        '--cluster-zones', action='store_true',
+        help='Enable k-means clustering to determine zone boundaries from the data'
+    )
+    cluster_group.add_argument(
+        '--n-clusters', type=int, default=3,
+        help='Number of tissue clusters (default: 3 = cortex/medulla/papilla; 5 = 5-zone)'
+    )
+    cluster_group.add_argument(
+        '--cluster-method', choices=['kmeans', 'gmm'], default='kmeans',
+        help='Clustering method (default: kmeans)'
+    )
+    cluster_group.add_argument(
+        '--cluster-condition', type=str, default=None,
+        help='Which condition to cluster on (default: first condition in config)'
+    )
+    cluster_group.add_argument(
+        '--save-cluster-config', type=Path, default=None,
+        help='Save clustered zone config as YAML for reuse with --zone-config'
+    )
+    cluster_group.add_argument(
+        '--cluster-reference', type=Path, default=None,
+        help='Load a saved clustered YAML and apply to ALL samples (Workflow A: '
+             'shared reference boundaries). Mutually exclusive with --cluster-zones.'
+    )
+
     args = parser.parse_args()
-    
+
+    # Validate mutual exclusion: --cluster-zones and --cluster-reference
+    if args.cluster_zones and args.cluster_reference:
+        parser.error("--cluster-zones and --cluster-reference are mutually exclusive.\n"
+                     "  Use --cluster-zones for per-sample clustering (Workflow B)\n"
+                     "  Use --cluster-reference for shared reference boundaries (Workflow A)")
+
     # Create output directory
     args.output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -980,8 +1223,34 @@ Note: Use prepare_data.py to generate t2star_maps, r2star_maps, and perfusion_ma
         print("  Zone config: configs/zones/kidney_24layer.yaml")
         print("  Threshold config: configs/thresholds/kidney_mouse_default.yaml")
     
+    # Build cluster_args if clustering enabled
+    cluster_args = None
+    zone_config_override = None
+
+    if args.cluster_reference:
+        # Workflow A: Load shared reference zone config
+        print(f"\nWorkflow A: Shared reference zone boundaries")
+        print(f"  Loading: {args.cluster_reference}")
+        zone_config_override = load_zone_config(args.cluster_reference)
+        n_zones = len(zone_config_override.get('zones', {}))
+        print(f"  Loaded {n_zones}-zone config")
+        for zname, zinfo in zone_config_override['zones'].items():
+            print(f"    {zname}: layers {zinfo['layers']}")
+    elif args.cluster_zones:
+        print(f"\nK-means clustering enabled (per-sample):")
+        print(f"  Clusters: {args.n_clusters}")
+        print(f"  Method: {args.cluster_method}")
+        if args.cluster_condition:
+            print(f"  Condition: {args.cluster_condition}")
+        cluster_args = {
+            'n_clusters': args.n_clusters,
+            'method': args.cluster_method,
+            'condition': args.cluster_condition,
+            'save_config_path': args.save_cluster_config,
+        }
+
     print("="*70)
-    
+
     # Determine mode
     if args.compare and args.group1_config and args.group2_config:
         # Comparison mode
@@ -995,11 +1264,15 @@ Note: Use prepare_data.py to generate t2star_maps, r2star_maps, and perfusion_ma
         
         # Load and analyze Group 1
         group1_data = load_data(group1_config)
-        group1_results = analyze_sample(group1_data, args.n_layers, args.output_dir)
-        
+        group1_results = analyze_sample(group1_data, args.n_layers, args.output_dir,
+                                        cluster_args=cluster_args,
+                                        zone_config_override=zone_config_override)
+
         # Load and analyze Group 2
         group2_data = load_data(group2_config)
-        group2_results = analyze_sample(group2_data, args.n_layers, args.output_dir)
+        group2_results = analyze_sample(group2_data, args.n_layers, args.output_dir,
+                                        cluster_args=cluster_args,
+                                        zone_config_override=zone_config_override)
         
         # Compare
         comparison = compare_groups(group1_results, group2_results, args.output_dir)
@@ -1021,8 +1294,254 @@ Note: Use prepare_data.py to generate t2star_maps, r2star_maps, and perfusion_ma
                         group1_results['conditions'][condition],
                         group2_results['conditions'][condition],
                         condition,
-                        output_path
+                        output_path,
+                        wt_zone_config=group1_results.get('zone_config'),
+                        ko_zone_config=group2_results.get('zone_config')
                     )
+        
+        # Generate oxygen challenge plots if we have the three conditions
+        print("\n" + "="*70)
+        print("CHECKING FOR OXYGEN CHALLENGE DATA")
+        print("="*70)
+        
+        # Helper function to transform data for plotting
+        def transform_for_oxygen_plotting(condition_results):
+            """Transform analyze_sample results into format expected by plotting functions
+            
+            Uses zone config to determine region order and layer counts for sequential numbering
+            """
+            transformed = {'regions': {}}
+            
+            # Check if this is multi-region data
+            if 'mode' in condition_results and condition_results['mode'] == 'multi_region':
+                
+                # Import zone config to get region structure
+                try:
+                    from tissue_zones import ZONE_CONFIG
+                    zone_config = ZONE_CONFIG
+                except ImportError:
+                    zone_config = None
+                
+                # Raw multi-region format (regions: right_cortex, left_cortex, etc.)
+                if 'regions' in condition_results:
+                    raw_regions = condition_results['regions']
+                    
+                    # Group regions by base name (cortex, medulla, papilla)
+                    region_groups = {}
+                    for raw_region_name, raw_region_data in raw_regions.items():
+                        # Remove right_/left_ prefix to get base region name
+                        base_region = raw_region_name.replace('right_', '').replace('left_', '')
+                        
+                        if base_region not in region_groups:
+                            region_groups[base_region] = []
+                        
+                        region_groups[base_region].append(raw_region_data)
+                    
+                    # Determine region order and layer counts from zone config if available
+                    if zone_config and 'regions' in zone_config:
+                        # Extract unique base regions and their layer counts from zone config
+                        zone_regions = {}
+                        for region_name, region_data in zone_config['regions'].items():
+                            base_name = region_name.replace('right_', '').replace('left_', '')
+                            if base_name not in zone_regions and 'n_layers' in region_data:
+                                zone_regions[base_name] = region_data['n_layers']
+                        
+                        # Create ordered list based on first appearance in zone config
+                        region_order = list(zone_regions.keys())
+                        print(f"\n  Using zone config region order: {region_order}")
+                        print(f"  Layer counts per region: {zone_regions}")
+                    else:
+                        # Fallback: use standard kidney order
+                        region_order = ['cortex', 'medulla', 'papilla']
+                        print(f"\n  Using default region order: {region_order}")
+                    
+                    # Process regions in determined order with sequential layer numbering
+                    global_layer_number = 1  # Sequential layer numbering across all regions
+                    
+                    for base_region in region_order:
+                        if base_region not in region_groups:
+                            continue
+                            
+                        region_list = region_groups[base_region]
+                        
+                        # Collect all layers by original layer_number within this region
+                        layers_by_number = {}
+                        
+                        for region_data in region_list:
+                            if isinstance(region_data, dict) and 'layers' in region_data:
+                                for layer in region_data['layers']:
+                                    layer_num = layer.get('layer_number', layer.get('layer', None))
+                                    
+                                    if layer_num is not None:
+                                        if layer_num not in layers_by_number:
+                                            layers_by_number[layer_num] = []
+                                        
+                                        layers_by_number[layer_num].append({
+                                            't2star_mean': layer.get('t2star', {}).get('mean', layer.get('t2star_mean', np.nan)),
+                                            'r2star_mean': layer.get('r2star', {}).get('mean', layer.get('r2star_mean', np.nan)),
+                                            'perfusion_mean': layer.get('perfusion', {}).get('mean', layer.get('perfusion_mean', np.nan))
+                                        })
+                        
+                        # Average bilateral layers and assign sequential global layer numbers
+                        averaged_layers = []
+                        start_layer = global_layer_number  # Track where this region starts
+                        
+                        for layer_num in sorted(layers_by_number.keys()):
+                            layer_group = layers_by_number[layer_num]
+                            
+                            # Average across bilateral measurements
+                            t2star_vals = [l['t2star_mean'] for l in layer_group if not np.isnan(l['t2star_mean'])]
+                            r2star_vals = [l['r2star_mean'] for l in layer_group if not np.isnan(l['r2star_mean'])]
+                            perfusion_vals = [l['perfusion_mean'] for l in layer_group if not np.isnan(l['perfusion_mean'])]
+                            
+                            averaged_layer = {
+                                'layer_number': global_layer_number,  # Use sequential numbering
+                                't2star_mean': np.mean(t2star_vals) if t2star_vals else np.nan,
+                                'r2star_mean': np.mean(r2star_vals) if r2star_vals else np.nan,
+                                'perfusion_mean': np.mean(perfusion_vals) if perfusion_vals else np.nan
+                            }
+                            averaged_layers.append(averaged_layer)
+                            global_layer_number += 1  # Increment for next layer
+                        
+                        end_layer = global_layer_number - 1  # Track where this region ends
+                        print(f"    {base_region}: {len(averaged_layers)} layers (global #{start_layer}-{end_layer})")
+                        
+                        transformed['regions'][base_region] = {'layers': averaged_layers}
+                
+                # Bilateral average format (if it exists - some workflows use this)
+                elif 'bilateral_average' in condition_results:
+                    bilateral = condition_results['bilateral_average']
+                    
+                    for region_name, region_data in bilateral.items():
+                        simple_name = region_name.replace('right_', '').replace('left_', '')
+                        
+                        if simple_name not in transformed['regions']:
+                            transformed['regions'][simple_name] = {'layers': []}
+                        
+                        if isinstance(region_data, dict) and 'layers' in region_data:
+                            for layer in region_data['layers']:
+                                transformed_layer = {
+                                    'layer_number': layer.get('layer_number', layer.get('layer', len(transformed['regions'][simple_name]['layers']) + 1)),
+                                    't2star_mean': layer.get('t2star', {}).get('mean', layer.get('t2star_mean', np.nan)),
+                                    'r2star_mean': layer.get('r2star', {}).get('mean', layer.get('r2star_mean', np.nan)),
+                                    'perfusion_mean': layer.get('perfusion', {}).get('mean', layer.get('perfusion_mean', np.nan))
+                                }
+                                transformed['regions'][simple_name]['layers'].append(transformed_layer)
+            
+            return transformed
+        
+        # Detect oxygen challenge conditions
+        conditions = list(group1_results['conditions'].keys())
+        print(f"Conditions found: {conditions}")
+        
+        # Map condition names (handle variations like oxygen1, oxygen_1, etc.)
+        condition_map = {}
+        for cond in conditions:
+            cond_lower = cond.lower()
+            if 'oxygen1' in cond_lower or 'oxygen_1' in cond_lower:
+                condition_map['oxygen1'] = cond
+            elif 'air' in cond_lower:
+                condition_map['air'] = cond
+            elif 'oxygen2' in cond_lower or 'oxygen_2' in cond_lower:
+                condition_map['oxygen2'] = cond
+        
+        # Check if we have all three conditions
+        has_oxygen_challenge = all(k in condition_map for k in ['oxygen1', 'air', 'oxygen2'])
+        
+        if has_oxygen_challenge:
+            print("\n✓ Oxygen challenge conditions detected!")
+            print(f"  • Oxygen 1: {condition_map['oxygen1']}")
+            print(f"  • Air: {condition_map['air']}")
+            print(f"  • Oxygen 2: {condition_map['oxygen2']}")
+            print("\nGenerating comprehensive oxygen challenge plots...")
+            
+            try:
+                from boldpy_plots import plot_comprehensive_oxygen_analysis
+                
+                # Organize data by condition
+                # Extract group names from config files
+                group1_name = group1_config.get('id', 'Group 1')
+                group2_name = group2_config.get('id', 'Group 2')
+                
+                # Prepare data structure for plotting with transformation
+                # Format: {condition: {group_name: data}}
+                print("\nTransforming data for plotting...")
+                oxygen1_data = {
+                    group1_name: transform_for_oxygen_plotting(group1_results['conditions'][condition_map['oxygen1']]),
+                    group2_name: transform_for_oxygen_plotting(group2_results['conditions'][condition_map['oxygen1']])
+                }
+                
+                air_data = {
+                    group1_name: transform_for_oxygen_plotting(group1_results['conditions'][condition_map['air']]),
+                    group2_name: transform_for_oxygen_plotting(group2_results['conditions'][condition_map['air']])
+                }
+                
+                oxygen2_data = {
+                    group1_name: transform_for_oxygen_plotting(group1_results['conditions'][condition_map['oxygen2']]),
+                    group2_name: transform_for_oxygen_plotting(group2_results['conditions'][condition_map['oxygen2']])
+                }
+                
+                # Verify data was extracted
+                for group_name in [group1_name, group2_name]:
+                    for cond_name, cond_data in [('oxygen1', oxygen1_data), ('air', air_data), ('oxygen2', oxygen2_data)]:
+                        n_regions = len(cond_data[group_name].get('regions', {}))
+                        print(f"  {group_name} {cond_name}: {n_regions} regions", end='')
+                        if n_regions > 0:
+                            region_names = list(cond_data[group_name]['regions'].keys())
+                            print(f" ({', '.join(region_names)})")
+                            # Check layer counts
+                            for rname in region_names:
+                                n_layers = len(cond_data[group_name]['regions'][rname].get('layers', []))
+                                print(f"    {rname}: {n_layers} layers")
+                        else:
+                            print()
+                            print(f"    ⚠ No regions found for {group_name} {cond_name}!")
+                
+                # Create output directory
+                oxygen_output_dir = args.output_dir / 'oxygen_challenge_analysis'
+                oxygen_output_dir.mkdir(exist_ok=True)
+                
+                # Generate comprehensive plots
+                plot_comprehensive_oxygen_analysis(
+                    oxygen1_data=oxygen1_data,
+                    air_data=air_data,
+                    oxygen2_data=oxygen2_data,
+                    output_dir=oxygen_output_dir,
+                    group_names=[group1_name, group2_name],
+                    sample_prefix='oxygen_analysis'
+                )
+                
+                print("\n" + "="*70)
+                print("✓ OXYGEN CHALLENGE PLOTS GENERATED!")
+                print("="*70)
+                print(f"Output directory: {oxygen_output_dir}")
+                print("\nGenerated plots:")
+                print("  1. Multi-parameter continuous (T2*, R2*, Perfusion) - 3 plots")
+                print("  2. Oxygen response profiles (ΔT2*, ΔR2*, ΔPerfusion) - 2 plots")
+                print("  3. Regional response bars (cortex/medulla/papilla) - 2 plots")
+                print("  4. Whole vs regional comparison - 1 plot")
+                print(f"\nTotal: 8 plots × 3 formats = {len(list(oxygen_output_dir.glob('*')))} files")
+                
+            except ImportError as e:
+                print(f"\n⚠ Could not import oxygen challenge plotting functions: {e}")
+                print("  Make sure boldpy_plots.py has the oxygen challenge functions")
+            except Exception as e:
+                print(f"\n✗ Error generating oxygen challenge plots: {e}")
+                import traceback
+                traceback.print_exc()
+        else:
+            print("\n⚠ Oxygen challenge conditions not complete")
+            missing = []
+            if 'oxygen1' not in condition_map:
+                missing.append('oxygen1/oxygen_1')
+            if 'air' not in condition_map:
+                missing.append('air')
+            if 'oxygen2' not in condition_map:
+                missing.append('oxygen2/oxygen_2')
+            print(f"  Missing: {', '.join(missing)}")
+            print("  Skipping oxygen challenge analysis")
+            print("  (Need all three conditions for oxygen challenge plots)")
+
     
     elif args.config:
         # Config file mode
@@ -1032,7 +1551,9 @@ Note: Use prepare_data.py to generate t2star_maps, r2star_maps, and perfusion_ma
             config = json.load(f)
         
         data = load_data(config)
-        results = analyze_sample(data, args.n_layers, args.output_dir)
+        results = analyze_sample(data, args.n_layers, args.output_dir,
+                                cluster_args=cluster_args,
+                                zone_config_override=zone_config_override)
         
         # Check if multi-region mode
         is_multi_region = any(

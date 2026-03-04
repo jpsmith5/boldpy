@@ -1,84 +1,189 @@
-# BoldPy v2.2.1
+# BoldPy v2.3.1
 
-**Tissue-Agnostic BOLD MRI Analysis Framework with Multi-Layer Concentric Object (MLCO) Analysis**
+**Renal BOLD MRI Analysis Framework with Multi-Layer Concentric Object (MLCO) Analysis,
+K-Means Zone Clustering, and Group-Level Statistics**
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
+## Overview
+
+BoldPy is a Python framework for quantitative BOLD MRI analysis using Multi-Layer Concentric
+Objects (MLCO). Developed for renal oxygenation studies in mouse models, it is applicable to
+any organ with concentric architecture (kidney, heart, eye).
+
+The pipeline extracts T2*, R2*, and perfusion maps from raw MRI data, creates radial
+layer-by-layer segmentations from organ surface to center, and generates quantitative profiles
+enabling cortex-to-medulla-to-papilla analysis. Group-level comparisons, data-driven zone
+boundary detection, and heterogeneity analysis are built in.
+
+---
+
 ## Features
 
-- **Multi-Layer Concentric Object (MLCO) Analysis** - Layer-by-layer quantification from surface to center
-- **Bilateral Organ Support** - Analyze both organs simultaneously with automatic splitting
-- **Intelligent T2* Detection** - Tiered frame identification (metadata → heuristic → manual)
-- **T2*/R2* Quantification** - Custom fitting or Bruker extraction
-- **Perfusion Integration** - Three-modality analysis (T2*, R2*, perfusion) with automatic upsampling
-- **Continuous Whole-Kidney Visualization** - Complete organ profiles (cortex → medulla → papilla)
-- **Tissue Quality Assessment** - Per-pixel viability classification with configurable thresholds
-- **Oxygen Responsiveness** - ΔT2* calculations for functional assessment
-- **Group Comparisons** - Statistical analysis with comprehensive visualizations
-- **Robust Data Handling** - Automatic handling of missing layers and incomplete data
-- **Comprehensive Visualization** - 18 plotting functions for all analysis types
+- **MLCO analysis** — 24-layer (configurable) bilateral radial segmentation from surface to center
+- **T2*/R2*/perfusion quantification** — per-layer bilateral statistics, ΔT2* oxygen response
+- **Intelligent T2* frame detection** — tiered: Bruker metadata → heuristic scoring → manual override
+- **Data-driven zone boundaries** — k-means clustering on per-layer T2*/R2*/perfusion medians
+- **Two-workflow group comparison** — shared reference (Workflow A) or per-sample boundaries (Workflow B)
+- **Project-level analysis** — cross-group MLCO profiles, overlay visualization, heterogeneity metrics
+- **18+ plotting functions** — PNG/PDF/SVG, dynamic zone color support
+- **Bruker PvDatasets + DICOM support** — `prepare_data.py` / `prepare_dicom.py`
+- **Robust missing-layer handling** — NaN fill, no crashes on incomplete data
+- **YAML zone configuration** — static or data-driven zone definitions
 
 ---
 
-## What's New in v2.2.1
+## What's New in v2.3.1
 
-### 🎯 **Tiered T2* Frame Detection**
-Intelligent three-tier approach for robust T2* frame identification:
-1. **Metadata parsing** - Reads Bruker `VisuCoreFrameType` labels
-2. **Enhanced scoring** - Multi-factor heuristic (100-point system)
-3. **Manual override** - New `--t2-frame N` option
+### Consolidated Project Analysis Scripts
+
+Three generic, config-driven scripts replace the previous collection of per-project analysis
+scripts. All accept `--config groups_config.json` and work with any experiment:
+
+- **`group_analysis.py`** — Cross-group MLCO profile comparison (mean ± SEM per layer,
+  Mann-Whitney tests, zone-level summary statistics)
+- **`overlay_analysis.py`** — K-means zone overlays + MLCO layer overlays + zone statistics
+  dot-plot in one pass (k-means computed once, reused for all figure types)
+- **`heterogeneity.py`** — Within-layer T2* heterogeneity profiling + focal disruption
+  analysis (pixel distributions, spatial local-CV maps)
+
+See `examples/groups_config.json` for the config template.
+
+### K-Means Zone Clustering (v2.3.0)
+
+Data-driven zone boundary detection replaces fixed layer-to-zone mappings:
 
 ```bash
-# Automatic detection (metadata → heuristic)
-python prepare_data.py --input scan.PvDatasets --output-dir prepared/
+# Per-sample clustering (Workflow B)
+python boldpy_analyze.py --config sample.json --cluster-zones --n-clusters 3
 
-# Manual override
-python prepare_data.py --input scan.PvDatasets --output-dir prepared/ --t2-frame 3
+# Apply one reference to all samples (Workflow A)
+python boldpy_analyze.py --group1-config g1.json --group2-config g2.json \
+    --compare --cluster-reference configs/zones/reference_k3.yaml
 ```
 
-### 📊 **Continuous Whole-Kidney Plotting**
-New visualization showing entire kidney as one continuous profile:
-- Cortex → Medulla → Papilla sequential visualization
-- T2*, R2*, and Perfusion in integrated panels
-- Configurable tissue viability thresholds
-- Group comparison overlays
-
-### 🔧 **Enhanced Robustness**
-- **Missing layers:** Automatically fills gaps with NaN (no crashes!)
-- **Layer numbering:** Infers from position when field missing
-- **Integer axes:** Clean whole-number layer labels
-
-### 🎨 **Perfusion Integration**
-Complete perfusion support in all Phase 2 plots with automatic upsampling (80×80 → 200×200)
-
-See [CHANGELOG.md](CHANGELOG.md) for complete details.
+See [K-Means Zone Clustering](docs/kmeans-zone-clustering.md) for full details.
 
 ---
 
-## System Requirements
+## Installation
 
-- Python 3.8 or higher
-- NumPy, SciPy, Matplotlib
-- For Bruker data: zipfile support (standard library)
-- Optional: mkdocs for documentation
+```bash
+git clone https://github.com/yourusername/boldpy
+cd boldpy
+pip install -e .                    # standard install
+pip install -e ".[dev]"             # with pytest, black, flake8
+pip install -e ".[dicom]"           # with DICOM support (pydicom)
+pip install -e ".[docs]"            # with MkDocs (for building this site)
+```
+
+**Requirements:** Python >= 3.8, numpy, scipy, matplotlib, scikit-image, scikit-learn, Pillow, tqdm
 
 ---
 
-## Example Output
+## Quick Start
 
-### Layer Profiles
-![MLCO Profiles](docs/example_outputs/M1_WT_tlco_profiles.png)
+### Per-Sample Pipeline (Steps 1–4)
 
-### Perfusion Integration
-![Perfusion Analysis](docs/example_outputs/M1_WT_perfusion_profile.png)
+```bash
+# Step 1: Extract maps from raw data
+python prepare_data.py --input scan.PvDatasets --output-dir prepared/ --both-t2star
+# or for DICOM:
+python prepare_dicom.py --input /path/to/dicom/ --output-dir prepared/
 
-### Group Comparison
-![Group Comparison](docs/example_outputs/WT_vs_KO_air_tlco_comparison.png)
+# Step 2: Draw ROI interactively
+python roi_drawer.py --image prepared/sample_reference.npy --output roi.npy
 
-*(Example images - see uploads folder for actual outputs)*
+# Step 3: Generate MLCO layers (24-layer bilateral)
+python generate_mlco.py --mask roi.npy --split \
+    --anatomical prepared/sample_reference.npy \
+    --n-layers 24 --output-dir mlco/ --label sample
+
+# Step 4: Per-sample analysis
+python boldpy_analyze.py --config sample_config.json \
+    --n-layers 24 --output-dir results/sample/
+```
+
+**sample_config.json** (see `example_config.json` for a complete template):
+```json
+{
+  "id": "sample_id",
+  "t2star_maps": {
+    "air":      "prepared/sample_air_t2star_custom.npy",
+    "oxygen_1": "prepared/sample_oxygen1_t2star_custom.npy",
+    "oxygen_2": "prepared/sample_oxygen2_t2star_custom.npy"
+  },
+  "r2star_maps": {
+    "air":      "prepared/sample_air_r2star_custom.npy",
+    "oxygen_1": "prepared/sample_oxygen1_r2star_custom.npy",
+    "oxygen_2": "prepared/sample_oxygen2_r2star_custom.npy"
+  },
+  "perfusion_map": "prepared/sample_perfusion.npy",
+  "mlco_mask":     "mlco/sample_mlco_layers.npy"
+}
+```
+
+### Project-Level Analysis (Step 5)
+
+After running `boldpy_analyze.py` for all samples, create a `groups_config.json`
+(see `examples/groups_config.json`) and run:
+
+```bash
+python group_analysis.py   --config groups_config.json
+python overlay_analysis.py --config groups_config.json
+python heterogeneity.py    --config groups_config.json
+```
+
+---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Quick Start](docs/quick-start.md) | Full 5-step workflow from raw data to group analysis |
+| [User Guide](docs/user-guide.md) | Comprehensive per-sample and project-level workflow |
+| [Scripts Reference](docs/scripts-reference.md) | All scripts with full options and outputs |
+| [K-Means Zone Clustering](docs/kmeans-zone-clustering.md) | Data-driven zone boundaries |
+| [Metrics Documentation](docs/metrics-documentation.md) | T2*, R2*, perfusion interpretation |
+| [Examples with Data](docs/examples-with-data.md) | Expected outputs and result interpretation |
+| [Installation](docs/installation.md) | Detailed setup and platform-specific notes |
+| [Changelog](CHANGELOG.md) | Version history |
+
+Build the documentation site locally:
+```bash
+pip install -e ".[docs]"
+mkdocs serve
+```
+
+---
+
+## Repository Layout
+
+```
+boldpy_v2.3.1/
+├── boldpy_analyze.py              # Per-sample pipeline orchestrator
+├── prepare_data.py                # Data extraction (Bruker PvDatasets)
+├── prepare_dicom.py               # Data extraction (DICOM)
+├── roi_drawer.py                  # Interactive ROI drawing
+├── generate_mlco.py               # MLCO mask generation
+├── mlco_analysis.py               # Layer-by-layer quantification
+├── boldpy_plots.py                # 18+ plotting functions
+├── boldpy_plots_multiregion.py    # Multiregion comparison plots
+├── cluster_zones.py               # K-means zone boundary clustering
+├── tissue_zones.py                # Zone config management
+├── group_analysis.py              # Project: cross-group MLCO profiles
+├── overlay_analysis.py            # Project: K-means + MLCO overlays
+├── heterogeneity.py               # Project: heterogeneity analysis
+├── fit_t2star.py                  # Standalone T2* fitting
+├── roi_format_utils.py            # ROI format utilities
+├── src/boldpy/                    # Python package library
+├── configs/                       # Zone and threshold YAML configs
+├── examples/                      # Tutorial data + groups_config.json template
+└── docs/                          # Documentation (mkdocs)
+```
 
 ---
 
@@ -88,11 +193,11 @@ If you use BoldPy in your research, please cite:
 
 ```bibtex
 @software{boldpy2026,
-  title = {BoldPy: Tissue-Agnostic BOLD MRI Analysis Framework},
-  author = {Your Name},
-  year = {2026},
-  version = {2.2.0},
-  url = {https://github.com/yourusername/boldpy}
+  title   = {BoldPy: Renal BOLD MRI Analysis Framework with MLCO and K-Means Zone Clustering},
+  author  = {Your Name},
+  year    = {2026},
+  version = {2.3.1},
+  url     = {https://github.com/yourusername/boldpy}
 }
 ```
 
@@ -100,30 +205,10 @@ If you use BoldPy in your research, please cite:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
----
-
-## Support
-
-- **Documentation:** [docs/](docs/)
-- **Issues:** [GitHub Issues](https://github.com/yourusername/boldpy/issues)
-- **Changelog:** [CHANGELOG.md](CHANGELOG.md)
+MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
 ## Acknowledgments
 
-- Bruker BioSpin for PvDatasets format documentation
-- Scientific community for BOLD MRI methodology
-- Open-source Python ecosystem
-
----
-
-**BoldPy v2.1.1** - January 2026
+Built on NumPy, SciPy, Matplotlib, scikit-image, scikit-learn.

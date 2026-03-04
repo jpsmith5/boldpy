@@ -1,10 +1,16 @@
 {
-  "id": "M1_WT",
-  "bold_scans": {
-    "air": "/absolute/path/to/data/M1/air_breathing.PvDatasets",
-    "oxygen_1": "/absolute/path/to/data/M1/oxygen_breathing_1.PvDatasets",
-    "oxygen_2": "/absolute/path/to/data/M1/oxygen_breathing_2.PvDatasets"
+  "_comment": "Example per-sample config for boldpy_analyze.py. Use absolute paths.",
+  "id": "sample_id",
+  "t2star_maps": {
+    "air":      "/absolute/path/to/prepared/sample_air_t2star_custom.npy",
+    "oxygen_1": "/absolute/path/to/prepared/sample_oxygen1_t2star_custom.npy",
+    "oxygen_2": "/absolute/path/to/prepared/sample_oxygen2_t2star_custom.npy"
   },
-  "perfusion": "/absolute/path/to/data/M1/perfusion_scan.PvDatasets",
-  "mlco_mask": "/absolute/path/to/masks/M1_mlco_mask_24layers.npy"
+  "r2star_maps": {
+    "air":      "/absolute/path/to/prepared/sample_air_r2star_custom.npy",
+    "oxygen_1": "/absolute/path/to/prepared/sample_oxygen1_r2star_custom.npy",
+    "oxygen_2": "/absolute/path/to/prepared/sample_oxygen2_r2star_custom.npy"
+  },
+  "perfusion_map": "/absolute/path/to/prepared/sample_perfusion.npy",
+  "mlco_mask":     "/absolute/path/to/mlco/sample_mlco_layers.npy"
 }

@@ -1,0 +1,25 @@
+{
+  "_comment": "Example groups config for BoldPy analysis scripts (group_compare.py, heterogeneity_analysis.py, focal_disruption.py, kmeans_overlay.py, kmeans_zone_analysis.py, mlco_overlay.py).",
+  "output_dir": "processed/analysis/my_experiment",
+  "hematology_csv": null,
+  "groups": {
+    "Control (n=2)": {
+      "ids":   ["sample_ctrl_1", "sample_ctrl_2"],
+      "color": "#E74C3C",
+      "ls":    "--",
+      "lw":    1.8,
+      "zorder": 4,
+      "label": "Control",
+      "short": "Ctrl"
+    },
+    "Treatment (n=3)": {
+      "ids":   ["sample_trt_1", "sample_trt_2", "sample_trt_3"],
+      "color": "#2E86C1",
+      "ls":    "-",
+      "lw":    2.0,
+      "zorder": 3,
+      "label": "Treatment",
+      "short": "Trt"
+    }
+  }
+}

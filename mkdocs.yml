@@ -1,5 +1,5 @@
-site_name: BoldPy v2.1.1 Documentation
-site_description: Tissue-Agnostic BOLD MRI Analysis Framework with MLCO
+site_name: BoldPy v2.3.1 Documentation
+site_description: Renal BOLD MRI Analysis Framework with MLCO & K-Means Clustering
 site_author: BoldPy Development Team
 
 theme:
@@ -52,6 +52,7 @@ nav:
   - Installation: installation.md
   - User Guide: user-guide.md
   - Scripts Reference: scripts-reference.md
+  - K-Means Zone Clustering: kmeans-zone-clustering.md
   - Metrics Documentation: metrics-documentation.md
   - Examples with Data: examples-with-data.md
   - Changelog: ../CHANGELOG.md

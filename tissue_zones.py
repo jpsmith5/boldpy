@@ -485,6 +485,32 @@ def update_configs(zone_config_path: Optional[Path] = None,
         THRESHOLD_CONFIG = load_threshold_config(threshold_config_path)
         TISSUE_THRESHOLDS = get_tissue_thresholds(THRESHOLD_CONFIG)
 
+
+def update_configs_from_dict(zone_config_dict: dict) -> None:
+    """
+    Inject a programmatically-generated zone config into module globals.
+
+    This is the integration point for data-driven zone boundaries (e.g., from
+    cluster_zones.py). Once called, all downstream code (mlco_analysis,
+    boldpy_plots) that reads ZONE_CONFIG / ZONE_DEFINITIONS / AGGREGATE_ZONES
+    from this module will see the new zone boundaries.
+
+    Parameters
+    ----------
+    zone_config_dict : dict
+        Zone config dict in the same structure as load_zone_config() output.
+        Must pass validate_zone_config().
+    """
+    global ZONE_CONFIG, ZONE_DEFINITIONS, AGGREGATE_ZONES
+
+    validate_zone_config(zone_config_dict)
+    ZONE_CONFIG = zone_config_dict
+
+    if not is_multiregion_config(ZONE_CONFIG):
+        ZONE_DEFINITIONS = get_zone_definitions(ZONE_CONFIG)
+        AGGREGATE_ZONES = get_aggregate_zones(ZONE_CONFIG)
+
+
 # ============================================================================
 # TISSUE CLASSIFICATION FUNCTIONS
 # ============================================================================

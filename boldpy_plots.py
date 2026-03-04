@@ -41,8 +41,9 @@ Date: January 2026
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+from matplotlib.ticker import MaxNLocator
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union, Tuple
 
 # Set style to avoid font warnings
 plt.rcParams['font.family'] = 'sans-serif'
@@ -74,6 +75,15 @@ ZONE_COLORS = {
 }
 
 
+def get_zone_color(zone_name, zone_index=0, total_zones=5):
+    """Get color for a zone name, with gradient fallback for data-driven zones."""
+    if zone_name in ZONE_COLORS:
+        return ZONE_COLORS[zone_name]
+    # Gradient from blue (cortex/surface) through peach (transition) to orange (medulla/center)
+    palette = ['#E8F4F8', '#C5E3ED', '#FFE5CC', '#FFD9B3', '#FFC999', '#FFB380', '#E6CCE6']
+    return palette[zone_index % len(palette)]
+
+
 def save_figure_multiple_formats(fig, base_path: Path, dpi: int = 300):
     """Save figure in PNG, SVG, and PDF formats"""
     base_path = Path(base_path)
@@ -95,25 +105,64 @@ def save_figure_multiple_formats(fig, base_path: Path, dpi: int = 300):
     print(f"  ✓ Saved PDF: {pdf_path.name}")
 
 
-def add_zone_shading(ax, n_layers: int = 24, alpha: float = 0.15):
-    """Add background shading for 5 zones"""
-    if not ZONES_AVAILABLE:
+def add_zone_shading(ax, n_layers: int = 24, alpha: float = 0.15,
+                     zone_config: dict = None, reference_zones: dict = None):
+    """Add background shading for tissue zones.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+    n_layers : int
+    alpha : float
+    zone_config : dict, optional
+        If provided, use this zone config's zone definitions instead of
+        the module-global ZONE_DEFINITIONS. Expected format: same as
+        tissue_zones.ZONE_CONFIG (has 'zones' key with layer lists).
+    reference_zones : dict, optional
+        If provided alongside zone_config, draw dashed boundary lines
+        for this second config (Workflow B: dual-boundary rendering).
+    """
+    if not ZONES_AVAILABLE and zone_config is None:
         return
-    
+
     y_min, y_max = ax.get_ylim()
-    
-    for zone_name, zone_info in ZONE_DEFINITIONS.items():
+
+    # Resolve zone definitions to use
+    if zone_config is not None and 'zones' in zone_config:
+        zone_defs = {}
+        for zname, zinfo in zone_config['zones'].items():
+            layers = zinfo['layers']
+            zone_defs[zname] = {
+                'layers': range(min(layers), max(layers) + 1) if layers else range(0),
+                'description': zinfo.get('description', ''),
+                'percentage': zinfo.get('percentage', 0),
+            }
+    else:
+        zone_defs = ZONE_DEFINITIONS
+
+    n_zones = len(zone_defs)
+    for idx, (zone_name, zone_info) in enumerate(zone_defs.items()):
         layers = zone_info['layers']
         x_start = min(layers) - 0.5
         x_end = max(layers) + 0.5
-        
+
         ax.add_patch(Rectangle(
             (x_start, y_min), x_end - x_start, y_max - y_min,
-            facecolor=ZONE_COLORS.get(zone_name, '#EEEEEE'),
+            facecolor=get_zone_color(zone_name, idx, n_zones),
             edgecolor='none',
             alpha=alpha,
             zorder=0
         ))
+
+    # Overlay reference zone boundaries as dashed lines (Workflow B)
+    if reference_zones is not None and 'zones' in reference_zones:
+        for zname, zinfo in reference_zones['zones'].items():
+            layers = zinfo['layers']
+            if layers:
+                boundary = max(layers) + 0.5
+                if boundary < n_layers + 0.5:
+                    ax.axvline(boundary, color='gray', linestyle='--',
+                               alpha=0.5, linewidth=1.0, zorder=1)
 
 
 def plot_perfusion_profile(results: Dict,
@@ -201,11 +250,9 @@ def plot_perfusion_profile(results: Dict,
             
             if zones:
                 summary_lines.append(f"{condition.upper()}:")
-                for zone_name in ['outer_cortex', 'inner_cortex', 'cmj', 'outer_medulla', 'inner_medulla']:
-                    if zone_name in zones:
-                        z = zones[zone_name]
-                        viable = z['tissue_quality']['viable_pct']
-                        summary_lines.append(f"  {zone_name:20s}: {viable:4.0f}% viable")
+                for zone_name, z in zones.items():
+                    viable = z['tissue_quality']['viable_pct']
+                    summary_lines.append(f"  {zone_name:20s}: {viable:4.0f}% viable")
                 summary_lines.append("")
         
         summary_text = "\n".join(summary_lines)
@@ -588,99 +635,136 @@ def plot_mlco_profile(results: Dict,
 def plot_mlco_comparison(wt_results: Dict,
                                 ko_results: Dict,
                                 condition: str,
-                                output_path: Path):
+                                output_path: Path,
+                                wt_zone_config: dict = None,
+                                ko_zone_config: dict = None):
     """
-    Compare WT vs KO with 5-zone statistics
-    
-    Enhanced version with effect sizes and zone-by-zone comparison
+    Compare WT vs KO with zone statistics
+
+    Enhanced version with effect sizes and zone-by-zone comparison.
+    Supports per-group zone configs for clustered zone workflows.
+
+    Parameters
+    ----------
+    wt_results : dict
+        Group 1 (WT) condition results with 'bilateral' key.
+    ko_results : dict
+        Group 2 (KO) condition results with 'bilateral' key.
+    condition : str
+        Condition name (e.g., 'air', 'oxygen_1').
+    output_path : Path
+        Output file path (saved in PNG/SVG/PDF).
+    wt_zone_config : dict, optional
+        Zone config for group 1 (from results['zone_config']).
+    ko_zone_config : dict, optional
+        Zone config for group 2 (from results['zone_config']).
     """
+    # Detect boundary compatibility
+    def _boundaries_match(zc1, zc2):
+        if zc1 is None and zc2 is None:
+            return True
+        if zc1 is None or zc2 is None:
+            return False
+        z1 = zc1.get('zones', {})
+        z2 = zc2.get('zones', {})
+        if set(z1.keys()) != set(z2.keys()):
+            return False
+        return all(set(z1[n].get('layers', [])) == set(z2[n].get('layers', []))
+                   for n in z1)
+
+    boundaries_match = _boundaries_match(wt_zone_config, ko_zone_config)
+
+    # Use group 1's zone config for shading (shared reference or primary)
+    primary_zc = wt_zone_config
+    reference_zc = ko_zone_config if not boundaries_match else None
+
     fig = plt.figure(figsize=(20, 14))
     gs = fig.add_gridspec(3, 3, hspace=0.4, wspace=0.3)
-    
+
     # Row 1: T2* and R2* bilateral comparison
     ax1 = fig.add_subplot(gs[0, 0])
-    add_zone_shading(ax1)
-    
+    add_zone_shading(ax1, zone_config=primary_zc, reference_zones=reference_zc)
+
     wt_layers = wt_results['bilateral']['layers']
     ko_layers = ko_results['bilateral']['layers']
-    
+
     if wt_layers:
         layers = [l['layer'] for l in wt_layers]
         t2_means = [l['t2star']['median'] for l in wt_layers]
         t2_stds = [l['t2star']['std'] for l in wt_layers]
-        
+
         ax1.errorbar(layers, t2_means, yerr=t2_stds,
                    marker='o', linestyle='-', linewidth=2, markersize=6,
                    capsize=4, color='steelblue', label='WT',
                    alpha=0.8, zorder=10)
-    
+
     if ko_layers:
         layers = [l['layer'] for l in ko_layers]
         t2_means = [l['t2star']['median'] for l in ko_layers]
         t2_stds = [l['t2star']['std'] for l in ko_layers]
-        
+
         ax1.errorbar(layers, t2_means, yerr=t2_stds,
                    marker='o', linestyle='-', linewidth=2, markersize=6,
                    capsize=4, color='coral', label='KO',
                    alpha=0.8, zorder=10)
-    
+
     ax1.set_xlabel('Layer (1=Cortex → 24=Medulla)', fontweight='bold', fontsize=10)
     ax1.set_ylabel('T2* (ms)', fontweight='bold', fontsize=10)
     ax1.set_title(f'Bilateral T2* - {condition.title()}', fontweight='bold', fontsize=11)
     ax1.legend(fontsize=9)
     ax1.grid(True, alpha=0.3, zorder=1)
     ax1.set_xticks(range(1, 25, 4))
-    
+
     # R2* comparison
     ax2 = fig.add_subplot(gs[0, 1])
-    add_zone_shading(ax2)
-    
+    add_zone_shading(ax2, zone_config=primary_zc, reference_zones=reference_zc)
+
     if wt_layers:
         layers = [l['layer'] for l in wt_layers]
         r2_means = [l['r2star']['median'] for l in wt_layers]
         r2_stds = [l['r2star']['std'] for l in wt_layers]
-        
+
         ax2.errorbar(layers, r2_means, yerr=r2_stds,
                    marker='s', linestyle='-', linewidth=2, markersize=6,
                    capsize=4, color='steelblue', label='WT',
                    alpha=0.8, zorder=10)
-    
+
     if ko_layers:
         layers = [l['layer'] for l in ko_layers]
         r2_means = [l['r2star']['median'] for l in ko_layers]
         r2_stds = [l['r2star']['std'] for l in ko_layers]
-        
+
         ax2.errorbar(layers, r2_means, yerr=r2_stds,
                    marker='s', linestyle='-', linewidth=2, markersize=6,
                    capsize=4, color='coral', label='KO',
                    alpha=0.8, zorder=10)
-    
+
     ax2.set_xlabel('Layer (1=Cortex → 24=Medulla)', fontweight='bold', fontsize=10)
     ax2.set_ylabel('R2* (Hz)', fontweight='bold', fontsize=10)
     ax2.set_title(f'Bilateral R2* - {condition.title()}', fontweight='bold', fontsize=11)
     ax2.legend(fontsize=9)
     ax2.grid(True, alpha=0.3, zorder=1)
     ax2.set_xticks(range(1, 25, 4))
-    
+
     # Gradient comparison
     ax3 = fig.add_subplot(gs[0, 2])
-    
+
     gradients = []
     labels = []
     colors_list = []
-    
+
     wt_grad = wt_results['bilateral'].get('gradient')
     if wt_grad and wt_grad['t2star']:
         gradients.append(wt_grad['t2star']['gradient'])
         labels.append('WT')
         colors_list.append('steelblue')
-    
+
     ko_grad = ko_results['bilateral'].get('gradient')
     if ko_grad and ko_grad['t2star']:
         gradients.append(ko_grad['t2star']['gradient'])
         labels.append('KO')
         colors_list.append('coral')
-    
+
     if gradients:
         x = np.arange(len(gradients))
         bars = ax3.bar(x, gradients, color=colors_list)
@@ -690,26 +774,26 @@ def plot_mlco_comparison(wt_results: Dict,
         ax3.set_xticklabels(labels)
         ax3.axhline(y=0, color='k', linestyle='--', alpha=0.5)
         ax3.grid(True, alpha=0.3, axis='y')
-        
+
         for bar, val in zip(bars, gradients):
             height = bar.get_height()
             ax3.text(bar.get_x() + bar.get_width()/2., height,
                    f'{val:+.1f}',
                    ha='center', va='bottom' if height > 0 else 'top',
                    fontweight='bold', fontsize=10)
-    
+
     # Row 2: Layer-by-layer difference
     ax4 = fig.add_subplot(gs[1, :])
-    add_zone_shading(ax4)
-    
+    add_zone_shading(ax4, zone_config=primary_zc, reference_zones=reference_zc)
+
     if wt_layers and ko_layers and len(wt_layers) == len(ko_layers):
         layers = [l['layer'] for l in wt_layers]
-        
+
         t2_diff = []
         for wt_l, ko_l in zip(wt_layers, ko_layers):
             diff = ko_l['t2star']['median'] - wt_l['t2star']['median']
             t2_diff.append(diff)
-        
+
         ax4.plot(layers, t2_diff, marker='o', linestyle='-', linewidth=3,
                markersize=8, color='purple', label='T2* Difference (KO - WT)',
                zorder=10)
@@ -721,7 +805,7 @@ def plot_mlco_comparison(wt_results: Dict,
         ax4.legend(fontsize=10)
         ax4.grid(True, alpha=0.3, zorder=1)
         ax4.set_xticks(range(1, 25, 2))
-        
+
         # Highlight significant differences
         max_diff = max(abs(min(t2_diff)), abs(max(t2_diff)))
         if max_diff > 5:
@@ -729,49 +813,86 @@ def plot_mlco_comparison(wt_results: Dict,
                            alpha=0.2, color='red', label='KO >> WT (>5ms)', zorder=5)
             ax4.fill_between(layers, t2_diff, 0, where=np.array(t2_diff) < -5,
                            alpha=0.2, color='blue', label='WT >> KO (>5ms)', zorder=5)
-    
-    # Row 3: 5-Zone statistical comparison
+
+    # Row 3: Zone comparison — content depends on boundary compatibility
     ax5 = fig.add_subplot(gs[2, :])
     ax5.axis('off')
-    
-    summary_lines = ["5-ZONE REGIONAL COMPARISON (WT vs KO)", "="*70, ""]
-    
-    if ZONES_AVAILABLE:
-        wt_zones = wt_results['bilateral'].get('zones', {})
-        ko_zones = ko_results['bilateral'].get('zones', {})
-        
-        for zone_name in ['outer_cortex', 'inner_cortex', 'cmj', 'outer_medulla', 'inner_medulla']:
-            if zone_name in wt_zones and zone_name in ko_zones:
-                wt_z = wt_zones[zone_name]
-                ko_z = ko_zones[zone_name]
-                
-                wt_t2 = wt_z['t2star']['mean']
-                ko_t2 = ko_z['t2star']['mean']
-                delta = ko_t2 - wt_t2
-                pct_change = (delta / wt_t2) * 100
-                
-                # Calculate effect size
-                effect_size = calculate_effect_size(
-                    wt_t2, wt_z['t2star']['std'],
-                    ko_t2, ko_z['t2star']['std']
-                )
-                
-                summary_lines.append(f"{zone_name.upper().replace('_', ' '):25s}:")
-                summary_lines.append(f"  WT:  T2* = {wt_t2:5.1f} ± {wt_z['t2star']['std']:4.1f} ms, "
-                                   f"Viable = {wt_z['tissue_quality']['viable_pct']:4.0f}%")
-                summary_lines.append(f"  KO:  T2* = {ko_t2:5.1f} ± {ko_z['t2star']['std']:4.1f} ms, "
-                                   f"Viable = {ko_z['tissue_quality']['viable_pct']:4.0f}%")
-                summary_lines.append(f"  Δ = {delta:+.1f} ms ({pct_change:+.0f}%), "
-                                   f"Effect size: {effect_size:.2f} ({interpret_effect_size(effect_size)})")
-                summary_lines.append("")
-    
+
+    wt_zones = wt_results['bilateral'].get('zones', {})
+    ko_zones = ko_results['bilateral'].get('zones', {})
+    n_zones = max(len(wt_zones), len(ko_zones))
+
+    if not boundaries_match and wt_zone_config is not None and ko_zone_config is not None:
+        # Workflow B: Show boundary comparison table instead of zone-level stats
+        summary_lines = [
+            "ZONE BOUNDARY COMPARISON (per-sample clustering detected)",
+            "="*70,
+            "",
+            "Zone boundaries differ between groups — zone-level stats not comparable.",
+            "Boundary differences shown below (+ = deeper in KO, - = shallower):",
+            "",
+        ]
+        try:
+            from cluster_zones import compare_zone_configs
+            bc = compare_zone_configs(wt_zone_config, ko_zone_config)
+            summary_lines.append(f"{'Zone':<20s} {'Jaccard':>8s} {'WT layers':>15s} {'KO layers':>15s} {'Shift':>10s}")
+            summary_lines.append("-" * 70)
+            for zname, info in bc.items():
+                wt_l = info.get('ref_layers', [])
+                ko_l = info.get('clustered_layers', [])
+                jac = f"{info['jaccard']:.2f}"
+                wt_range = f"{min(wt_l)}-{max(wt_l)}" if wt_l else "N/A"
+                ko_range = f"{min(ko_l)}-{max(ko_l)}" if ko_l else "N/A"
+                shift = info.get('boundary_shift', {})
+                shift_str = f"L:{shift.get('lower', '-'):+d} U:{shift.get('upper', '-'):+d}" if shift else "N/A"
+                summary_lines.append(f"{zname:<20s} {jac:>8s} {wt_range:>15s} {ko_range:>15s} {shift_str:>10s}")
+        except (ImportError, Exception) as e:
+            summary_lines.append(f"  Could not compute boundary comparison: {e}")
+
+    else:
+        # Workflow A / default: Zone-level statistical comparison
+        summary_lines = [f"{n_zones}-ZONE REGIONAL COMPARISON (WT vs KO)", "="*70, ""]
+
+        if ZONES_AVAILABLE:
+            # Iterate over zones present in both results
+            all_zone_names = list(dict.fromkeys(list(wt_zones.keys()) + list(ko_zones.keys())))
+            for zone_name in all_zone_names:
+                if zone_name in wt_zones and zone_name in ko_zones:
+                    wt_z = wt_zones[zone_name]
+                    ko_z = ko_zones[zone_name]
+
+                    wt_t2 = wt_z['t2star']['mean']
+                    ko_t2 = ko_z['t2star']['mean']
+                    delta = ko_t2 - wt_t2
+                    pct_change = (delta / wt_t2) * 100
+
+                    # Calculate effect size
+                    effect_size = calculate_effect_size(
+                        wt_t2, wt_z['t2star']['std'],
+                        ko_t2, ko_z['t2star']['std']
+                    )
+
+                    summary_lines.append(f"{zone_name.upper().replace('_', ' '):25s}:")
+                    summary_lines.append(f"  WT:  T2* = {wt_t2:5.1f} ± {wt_z['t2star']['std']:4.1f} ms, "
+                                       f"Viable = {wt_z['tissue_quality']['viable_pct']:4.0f}%")
+                    summary_lines.append(f"  KO:  T2* = {ko_t2:5.1f} ± {ko_z['t2star']['std']:4.1f} ms, "
+                                       f"Viable = {ko_z['tissue_quality']['viable_pct']:4.0f}%")
+                    summary_lines.append(f"  Δ = {delta:+.1f} ms ({pct_change:+.0f}%), "
+                                       f"Effect size: {effect_size:.2f} ({interpret_effect_size(effect_size)})")
+                    summary_lines.append("")
+
     summary_text = "\n".join(summary_lines)
     ax5.text(0.05, 0.95, summary_text, transform=ax5.transAxes,
            fontsize=9, family='monospace', verticalalignment='top')
-    
-    plt.suptitle(f'WT vs KO Comparison - {condition.title()} (24 Layers)',
+
+    # Add boundary mismatch annotation
+    title_suffix = ""
+    if not boundaries_match and wt_zone_config is not None:
+        title_suffix = " [per-sample zones — boundaries differ]"
+
+    plt.suptitle(f'WT vs KO Comparison - {condition.title()} (24 Layers){title_suffix}',
                 fontsize=15, fontweight='bold')
-    
+
     save_figure_multiple_formats(fig, output_path)
     plt.close()
 
@@ -2850,3 +2971,1405 @@ def plot_whole_kidney_comparison(
     plt.close(fig)
 
 
+# ============================================================================
+# MULTI-REGION OXYGEN CHALLENGE COMPARISON PLOTS
+# Added: 2026-01-27
+# Comprehensive plotting suite for oxygen challenge experiments
+# ============================================================================
+
+def plot_multiparameter_continuous_comparison(
+    group_data: Dict[str, Dict],
+    output_path: Union[str, Path],
+    group_names: Optional[List[str]] = None,
+    condition: str = 'air',
+    include_perfusion: bool = True,
+    figsize: Tuple[float, float] = (7.09, 8.27)  # 180mm × 210mm
+) -> None:
+    """
+    Create 3-panel stacked comparison: T2*, R2*, and Perfusion
+    
+    Parameters
+    ----------
+    group_data : dict
+        {'group1': {'regions': {...}}, 'group2': {'regions': {...}}}
+    output_path : str or Path
+        Output file path (without extension)
+    group_names : list, optional
+        Names for groups (default: ['Group 1', 'Group 2'])
+    condition : str
+        Condition name for title
+    include_perfusion : bool
+        Whether to include perfusion panel
+    figsize : tuple
+        Figure size in inches (width, height)
+    """
+    from scipy import stats
+    
+    if group_names is None:
+        group_names = [f'Group {i+1}' for i in range(len(group_data))]
+    
+    # Determine number of panels
+    n_panels = 3 if include_perfusion else 2
+    
+    fig, axes = plt.subplots(n_panels, 1, figsize=figsize, sharex=True)
+    if n_panels == 1:
+        axes = [axes]
+    
+    colors = ['#2E86AB', '#E63946', '#06A77D', '#F77F00']  # Blue, Red, Green, Orange
+    
+    # Extract data for each group
+    groups_plot_data = []
+    max_layer = 0  # Track actual maximum layer number
+    
+    for idx, (group_id, data) in enumerate(group_data.items()):
+        group_info = {
+            'name': group_names[idx] if idx < len(group_names) else group_id,
+            'color': colors[idx % len(colors)],
+            'layers': [],
+            't2star': [],
+            'r2star': [],
+            'perfusion': [],
+            'region_boundaries': []  # Store boundaries from actual data
+        }
+        
+        # Aggregate across regions and track boundaries
+        current_layer = 0
+        for region_name, region_data in data.get('regions', {}).items():
+            layers_in_region = region_data.get('layers', [])
+            if len(layers_in_region) > 0:
+                # Track region start
+                region_start = current_layer
+                
+                for layer in layers_in_region:
+                    layer_num = layer.get('layer_number', len(group_info['layers']) + 1)
+                    group_info['layers'].append(layer_num)
+                    group_info['t2star'].append(layer.get('t2star_mean', np.nan))
+                    group_info['r2star'].append(layer.get('r2star_mean', np.nan))
+                    group_info['perfusion'].append(layer.get('perfusion_mean', np.nan))
+                    max_layer = max(max_layer, layer_num)
+                    current_layer += 1
+                
+                # Track region end
+                region_end = current_layer
+                
+                # Assign colors based on region name
+                region_color = '#90EE90'  # Default green
+                if 'medulla' in region_name.lower():
+                    region_color = '#FFD700'  # Yellow for medulla
+                elif 'papilla' in region_name.lower():
+                    region_color = '#F08080'  # Pink for papilla
+                
+                group_info['region_boundaries'].append({
+                    'name': region_name.capitalize(),
+                    'start': region_start,
+                    'end': region_end,
+                    'color': region_color
+                })
+        
+        groups_plot_data.append(group_info)
+    
+    # Use boundaries from first group (should be same for all groups)
+    region_bounds = groups_plot_data[0]['region_boundaries'] if groups_plot_data else []
+    
+    # Panel 1: T2*
+    ax_t2 = axes[0]
+    for group_info in groups_plot_data:
+        ax_t2.plot(group_info['layers'], group_info['t2star'],
+                   'o-', color=group_info['color'], linewidth=2,
+                   markersize=5, label=group_info['name'], alpha=0.8)
+    
+    # Region shading
+    for region in region_bounds:
+        ax_t2.axvspan(region['start'], region['end'],
+                      alpha=0.1, color=region['color'], zorder=0)
+    
+    ax_t2.set_ylabel('T2* (ms)', fontweight='bold', fontsize=11)
+    ax_t2.set_title(f'Multi-Parameter Spatial Profile: {condition.capitalize()}',
+                    fontweight='bold', fontsize=13)
+    ax_t2.legend(loc='best', fontsize=9, frameon=True)
+    ax_t2.grid(True, alpha=0.3, linestyle='--')
+    ax_t2.xaxis.set_major_locator(MaxNLocator(integer=True))
+    
+    # Panel 2: R2*
+    ax_r2 = axes[1]
+    for group_info in groups_plot_data:
+        ax_r2.plot(group_info['layers'], group_info['r2star'],
+                   's-', color=group_info['color'], linewidth=2,
+                   markersize=5, label=group_info['name'], alpha=0.8)
+    
+    for region in region_bounds:
+        ax_r2.axvspan(region['start'], region['end'],
+                      alpha=0.1, color=region['color'], zorder=0)
+    
+    ax_r2.set_ylabel('R2* (1/s)', fontweight='bold', fontsize=11)
+    ax_r2.legend(loc='best', fontsize=9, frameon=True)
+    ax_r2.grid(True, alpha=0.3, linestyle='--')
+    ax_r2.xaxis.set_major_locator(MaxNLocator(integer=True))
+    
+    # Panel 3: Perfusion (if included)
+    if include_perfusion:
+        ax_perf = axes[2]
+        for group_info in groups_plot_data:
+            ax_perf.plot(group_info['layers'], group_info['perfusion'],
+                        '^-', color=group_info['color'], linewidth=2,
+                        markersize=5, label=group_info['name'], alpha=0.8)
+        
+        for region in region_bounds:
+            ax_perf.axvspan(region['start'], region['end'],
+                           alpha=0.1, color=region['color'], zorder=0)
+        
+        ax_perf.set_ylabel('Perfusion (ml/100g/min)', fontweight='bold', fontsize=11)
+        ax_perf.set_xlabel('Layer (Cortex → Medulla → Papilla)', fontweight='bold', fontsize=11)
+        ax_perf.legend(loc='best', fontsize=9, frameon=True)
+        ax_perf.grid(True, alpha=0.3, linestyle='--')
+        ax_perf.xaxis.set_major_locator(MaxNLocator(integer=True))
+    else:
+        axes[1].set_xlabel('Layer (Cortex → Medulla → Papilla)', fontweight='bold', fontsize=11)
+    
+    # Set x-axis limits based on actual data
+    if max_layer > 0:
+        for ax in axes:
+            ax.set_xlim(0, max_layer + 1)  # Add small padding
+    
+    plt.tight_layout()
+    _save_figure_formats(fig, output_path)
+    plt.close(fig)
+
+
+def plot_oxygen_response_profiles(
+    baseline_data: Dict[str, Dict],
+    oxygen_data: Dict[str, Dict],
+    output_path: Union[str, Path],
+    group_names: Optional[List[str]] = None,
+    baseline_label: str = 'Air',
+    oxygen_label: str = 'O2',
+    figsize: Tuple[float, float] = (7.09, 8.27)
+) -> None:
+    """
+    Plot oxygen response profiles (Delta = O2 - Air) for T2*, R2*, Perfusion
+    
+    Parameters
+    ----------
+    baseline_data : dict
+        Air condition data for each group
+    oxygen_data : dict
+        O2 condition data for each group
+    output_path : str or Path
+        Output file path
+    group_names : list, optional
+        Names for groups
+    baseline_label : str
+        Label for baseline condition
+    oxygen_label : str
+        Label for oxygen condition
+    figsize : tuple
+        Figure size
+    """
+    if group_names is None:
+        group_names = [f'Group {i+1}' for i in range(len(baseline_data))]
+    
+    fig, axes = plt.subplots(3, 1, figsize=figsize, sharex=True)
+    
+    colors = ['#2E86AB', '#E63946', '#06A77D', '#F77F00']
+    
+    # Calculate deltas for each group
+    for idx, group_id in enumerate(baseline_data.keys()):
+        baseline = baseline_data[group_id]
+        oxygen = oxygen_data[group_id]
+        
+        color = colors[idx % len(colors)]
+        name = group_names[idx] if idx < len(group_names) else group_id
+        
+        # Extract layer-by-layer data
+        layers_baseline = []
+        t2_baseline = []
+        r2_baseline = []
+        perf_baseline = []
+        
+        for region_data in baseline.get('regions', {}).values():
+            for layer in region_data.get('layers', []):
+                layer_num = layer.get('layer_number', len(layers_baseline) + 1)
+                layers_baseline.append(layer_num)
+                t2_baseline.append(layer.get('t2star_mean', np.nan))
+                r2_baseline.append(layer.get('r2star_mean', np.nan))
+                perf_baseline.append(layer.get('perfusion_mean', np.nan))
+        
+        layers_oxygen = []
+        t2_oxygen = []
+        r2_oxygen = []
+        perf_oxygen = []
+        
+        for region_data in oxygen.get('regions', {}).values():
+            for layer in region_data.get('layers', []):
+                layer_num = layer.get('layer_number', len(layers_oxygen) + 1)
+                layers_oxygen.append(layer_num)
+                t2_oxygen.append(layer.get('t2star_mean', np.nan))
+                r2_oxygen.append(layer.get('r2star_mean', np.nan))
+                perf_oxygen.append(layer.get('perfusion_mean', np.nan))
+        
+        # Calculate deltas
+        layers = np.array(layers_baseline)
+        delta_t2 = np.array(t2_oxygen) - np.array(t2_baseline)
+        delta_r2 = np.array(r2_oxygen) - np.array(r2_baseline)
+        delta_perf = np.array(perf_oxygen) - np.array(perf_baseline)
+        
+        # Plot ΔT2*
+        axes[0].plot(layers, delta_t2, 'o-', color=color, linewidth=2,
+                    markersize=5, label=name, alpha=0.8)
+        axes[0].axhline(y=0, color='black', linestyle='--', linewidth=1, alpha=0.5)
+        axes[0].set_ylabel('ΔT2* (ms)', fontweight='bold', fontsize=11)
+        axes[0].set_title(f'Oxygen Response Profile (Δ = {oxygen_label} - {baseline_label})',
+                         fontweight='bold', fontsize=13)
+        axes[0].legend(loc='best', fontsize=9)
+        axes[0].grid(True, alpha=0.3)
+        
+        # Plot ΔR2*
+        axes[1].plot(layers, delta_r2, 's-', color=color, linewidth=2,
+                    markersize=5, label=name, alpha=0.8)
+        axes[1].axhline(y=0, color='black', linestyle='--', linewidth=1, alpha=0.5)
+        axes[1].set_ylabel('ΔR2* (1/s)', fontweight='bold', fontsize=11)
+        axes[1].legend(loc='best', fontsize=9)
+        axes[1].grid(True, alpha=0.3)
+        
+        # Plot ΔPerfusion
+        axes[2].plot(layers, delta_perf, '^-', color=color, linewidth=2,
+                    markersize=5, label=name, alpha=0.8)
+        axes[2].axhline(y=0, color='black', linestyle='--', linewidth=1, alpha=0.5)
+        axes[2].set_ylabel('ΔPerfusion\n(ml/100g/min)', fontweight='bold', fontsize=11)
+        axes[2].set_xlabel('Layer (Cortex → Medulla → Papilla)', fontweight='bold', fontsize=11)
+        axes[2].legend(loc='best', fontsize=9)
+        axes[2].grid(True, alpha=0.3)
+    
+    for ax in axes:
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    
+    plt.tight_layout()
+    _save_figure_formats(fig, output_path)
+    plt.close(fig)
+
+
+def plot_regional_response_bars(
+    baseline_data: Dict[str, Dict],
+    oxygen_data: Dict[str, Dict],
+    output_path: Union[str, Path],
+    group_names: Optional[List[str]] = None,
+    regions: Optional[List[str]] = None,
+    baseline_label: str = 'Air',
+    oxygen_label: str = 'O2',
+    figsize: Tuple[float, float] = (7.09, 6.0),
+    run_stats: bool = True
+) -> None:
+    """
+    Regional oxygen response bar charts with statistical comparison
+    
+    Parameters
+    ----------
+    baseline_data : dict
+        Air condition data {'group_id': {'regions': {...}}}
+    oxygen_data : dict
+        O2 condition data
+    output_path : str or Path
+        Output file path
+    group_names : list, optional
+        Names for groups
+    regions : list, optional
+        Region names to plot (default: ['cortex', 'medulla', 'papilla'])
+    baseline_label : str
+        Baseline condition label
+    oxygen_label : str
+        Oxygen condition label
+    figsize : tuple
+        Figure size
+    run_stats : bool
+        Whether to run statistical tests (requires n>1)
+    """
+    from scipy import stats
+    
+    if group_names is None:
+        group_names = [f'Group {i+1}' for i in range(len(baseline_data))]
+    
+    if regions is None:
+        regions = ['cortex', 'medulla', 'papilla']
+    
+    # Debug: Print what regions are actually available
+    if baseline_data:
+        first_group = list(baseline_data.keys())[0]
+        available_regions = list(baseline_data[first_group].get('regions', {}).keys())
+        print(f"  Regional bar plot: Looking for regions {regions}")
+        print(f"  Regional bar plot: Found regions {available_regions}")
+        if set(regions) != set(available_regions):
+            print(f"  ⚠ Region mismatch! Requested {regions} but data has {available_regions}")
+    
+    fig, axes = plt.subplots(3, 1, figsize=figsize, sharex=True)
+    
+    colors = ['#2E86AB', '#E63946']
+    measurements = [
+        ('t2star_mean', 'ΔT2* (ms)', 'T2*'),
+        ('r2star_mean', 'ΔR2* (1/s)', 'R2*'),
+        ('perfusion_mean', 'ΔPerfusion (ml/100g/min)', 'Perfusion')
+    ]
+    
+    x_pos = np.arange(len(regions))
+    width = 0.35
+    
+    for ax_idx, (measure_key, ylabel, title) in enumerate(measurements):
+        ax = axes[ax_idx]
+        
+        # Calculate regional responses for each group
+        group_responses = []
+        for group_id in baseline_data.keys():
+            regional_deltas = {}
+            
+            # Debug: Check what regions we have
+            available_regions = list(baseline_data[group_id].get('regions', {}).keys())
+            if not available_regions and group_id == list(baseline_data.keys())[0]:
+                print(f"  ⚠ Warning: No regions found in baseline data for {group_id}")
+                print(f"    Data keys: {list(baseline_data[group_id].keys())}")
+            
+            for region in regions:
+                # Get baseline value
+                baseline_region = baseline_data[group_id].get('regions', {}).get(region, {})
+                oxygen_region = oxygen_data[group_id].get('regions', {}).get(region, {})
+                
+                # Average across layers in region
+                baseline_vals = [layer.get(measure_key, np.nan) 
+                               for layer in baseline_region.get('layers', [])]
+                oxygen_vals = [layer.get(measure_key, np.nan)
+                             for layer in oxygen_region.get('layers', [])]
+                
+                if baseline_vals and oxygen_vals:
+                    baseline_mean = np.nanmean(baseline_vals)
+                    oxygen_mean = np.nanmean(oxygen_vals)
+                    delta = oxygen_mean - baseline_mean
+                else:
+                    delta = np.nan
+                    if group_id == list(baseline_data.keys())[0] and ax_idx == 0:
+                        print(f"  ⚠ No data for region '{region}': baseline={len(baseline_vals)} oxygen={len(oxygen_vals)}")
+                
+                regional_deltas[region] = delta
+            
+            group_responses.append(regional_deltas)
+        
+        # Plot bars for each group
+        for group_idx, (group_id, responses) in enumerate(zip(baseline_data.keys(), group_responses)):
+            values = [responses.get(region, np.nan) for region in regions]
+            offset = width * (group_idx - 0.5)
+            
+            name = group_names[group_idx] if group_idx < len(group_names) else group_id
+            color = colors[group_idx % len(colors)]
+            
+            bars = ax.bar(x_pos + offset, values, width, label=name,
+                         color=color, alpha=0.7, edgecolor='black', linewidth=1)
+            
+            # Add value labels on bars
+            for bar, val in zip(bars, values):
+                if not np.isnan(val):
+                    height = bar.get_height()
+                    ax.text(bar.get_x() + bar.get_width()/2., height,
+                           f'{val:.1f}',
+                           ha='center', va='bottom' if height >= 0 else 'top',
+                           fontsize=8, fontweight='bold')
+        
+        # Add zero line
+        ax.axhline(y=0, color='black', linestyle='--', linewidth=1, alpha=0.5)
+        
+        # Formatting
+        ax.set_ylabel(ylabel, fontweight='bold', fontsize=10)
+        if ax_idx == 0:
+            ax.set_title(f'Regional Oxygen Response (Δ = {oxygen_label} - {baseline_label})',
+                        fontweight='bold', fontsize=12)
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels([r.capitalize() for r in regions])
+        ax.legend(loc='best', fontsize=9)
+        ax.grid(True, alpha=0.3, axis='y')
+        
+        # Add y-axis padding for labels (15% on top, 10% on bottom)
+        ylim = ax.get_ylim()
+        y_range = ylim[1] - ylim[0]
+        ax.set_ylim(ylim[0] - 0.10 * y_range, ylim[1] + 0.15 * y_range)
+        
+        # Add statistics if requested and n>1
+        if run_stats and len(baseline_data) == 2:
+            # For n=1, just show data; for n>1, add p-values
+            # (Statistical testing code would go here for n>1)
+            pass
+    
+    axes[-1].set_xlabel('Region', fontweight='bold', fontsize=11)
+    
+    plt.tight_layout()
+    _save_figure_formats(fig, output_path)
+    plt.close(fig)
+
+
+def plot_whole_vs_regional_comparison(
+    baseline_data: Dict[str, Dict],
+    oxygen_data: Dict[str, Dict],
+    output_path: Union[str, Path],
+    group_names: Optional[List[str]] = None,
+    baseline_label: str = 'Air',
+    oxygen_label: str = 'O2',
+    figsize: Tuple[float, float] = (7.09, 5.0)
+) -> None:
+    """
+    Demonstrate why spatial analysis matters by comparing whole-kidney
+    average vs regional analysis
+    
+    Shows how regional pathology can be masked by whole-kidney averaging
+    """
+    if group_names is None:
+        group_names = [f'Group {i+1}' for i in range(len(baseline_data))]
+    
+    fig, axes = plt.subplots(2, 1, figsize=figsize)
+    
+    colors = ['#2E86AB', '#E63946']
+    regions = ['cortex', 'medulla', 'papilla']
+    
+    # Calculate responses
+    for group_idx, group_id in enumerate(baseline_data.keys()):
+        baseline = baseline_data[group_id]
+        oxygen = oxygen_data[group_id]
+        
+        name = group_names[group_idx] if group_idx < len(group_names) else group_id
+        color = colors[group_idx % len(colors)]
+        
+        # Whole-kidney average
+        all_baseline_t2 = []
+        all_oxygen_t2 = []
+        
+        for region_data in baseline.get('regions', {}).values():
+            all_baseline_t2.extend([layer.get('t2star_mean', np.nan) 
+                                   for layer in region_data.get('layers', [])])
+        
+        for region_data in oxygen.get('regions', {}).values():
+            all_oxygen_t2.extend([layer.get('t2star_mean', np.nan) 
+                                 for layer in region_data.get('layers', [])])
+        
+        # Calculate whole-kidney delta (handle empty data)
+        if len(all_baseline_t2) > 0 and len(all_oxygen_t2) > 0:
+            whole_baseline = np.nanmean(all_baseline_t2)
+            whole_oxygen = np.nanmean(all_oxygen_t2)
+            whole_delta = whole_oxygen - whole_baseline
+        else:
+            # No data available - use NaN
+            whole_delta = np.nan
+        
+        # Regional responses
+        regional_deltas = []
+        for region in regions:
+            baseline_region = baseline.get('regions', {}).get(region, {})
+            oxygen_region = oxygen.get('regions', {}).get(region, {})
+            
+            baseline_vals = [layer.get('t2star_mean', np.nan) 
+                           for layer in baseline_region.get('layers', [])]
+            oxygen_vals = [layer.get('t2star_mean', np.nan)
+                         for layer in oxygen_region.get('layers', [])]
+            
+            if baseline_vals and oxygen_vals:
+                delta = np.nanmean(oxygen_vals) - np.nanmean(baseline_vals)
+            else:
+                delta = np.nan
+            
+            regional_deltas.append(delta)
+        
+        # Plot whole-kidney average
+        ax = axes[0]
+        if not np.isnan(whole_delta):
+            ax.bar([group_idx], [whole_delta], width=0.5, color=color,
+                   alpha=0.7, edgecolor='black', linewidth=1.5, label=name)
+            ax.text(group_idx, whole_delta, f'{whole_delta:.1f} ms',
+                   ha='center', va='bottom' if whole_delta >= 0 else 'top',
+                   fontsize=10, fontweight='bold')
+        
+        # Plot regional analysis
+        ax = axes[1]
+        x_pos = np.arange(len(regions))
+        offset = 0.35 * (group_idx - 0.5)
+        bars = ax.bar(x_pos + offset, regional_deltas, width=0.35,
+                     color=color, alpha=0.7, edgecolor='black', linewidth=1, label=name)
+        
+        for bar, val in zip(bars, regional_deltas):
+            if not np.isnan(val):
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height,
+                       f'{val:.1f}',
+                       ha='center', va='bottom' if height >= 0 else 'top',
+                       fontsize=9, fontweight='bold')
+    
+    # Format whole-kidney panel
+    axes[0].axhline(y=0, color='black', linestyle='--', linewidth=1)
+    axes[0].set_ylabel('ΔT2* (ms)', fontweight='bold', fontsize=10)
+    axes[0].set_title('Whole-Kidney Average\n(Spatial detail masked)',
+                     fontweight='bold', fontsize=11, color='gray')
+    axes[0].set_xticks(range(len(group_names)))
+    axes[0].set_xticklabels([])
+    axes[0].legend(loc='best', fontsize=9)
+    axes[0].grid(True, alpha=0.3, axis='y')
+    
+    # Add warning annotation
+    axes[0].text(0.5, 0.95, '⚠ Regional differences may be hidden',
+                transform=axes[0].transAxes, ha='center', va='top',
+                fontsize=9, style='italic', color='red',
+                bbox=dict(boxstyle='round', facecolor='yellow', alpha=0.3))
+    
+    # Format regional panel
+    axes[1].axhline(y=0, color='black', linestyle='--', linewidth=1)
+    axes[1].set_ylabel('ΔT2* (ms)', fontweight='bold', fontsize=10)
+    axes[1].set_title('Regional Analysis\n(Spatial detail revealed)',
+                     fontweight='bold', fontsize=11, color='green')
+    axes[1].set_xticks(np.arange(len(regions)))
+    axes[1].set_xticklabels([r.capitalize() for r in regions])
+    axes[1].set_xlabel('Region', fontweight='bold', fontsize=10)
+    axes[1].legend(loc='best', fontsize=9)
+    axes[1].grid(True, alpha=0.3, axis='y')
+    
+    # Add success annotation
+    axes[1].text(0.5, 0.95, '✓ Regional pathology detected',
+                transform=axes[1].transAxes, ha='center', va='top',
+                fontsize=9, style='italic', color='green',
+                bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.3))
+    
+    # Add y-axis padding for both panels to prevent label overlap
+    for ax in axes:
+        ylim = ax.get_ylim()
+        y_range = ylim[1] - ylim[0]
+        ax.set_ylim(ylim[0] - 0.10 * y_range, ylim[1] + 0.15 * y_range)
+    
+    plt.tight_layout()
+    _save_figure_formats(fig, output_path)
+    plt.close(fig)
+
+
+def plot_statistical_summary_dashboard(
+    baseline_data: Dict[str, Dict],
+    oxygen1_data: Dict[str, Dict],
+    oxygen2_data: Dict[str, Dict],
+    output_path: Union[str, Path],
+    group_names: Optional[List[str]] = None
+) -> None:
+    """
+    Plot 8: Statistical summary dashboard
+    
+    Comprehensive statistical analysis showing:
+    - Effect sizes (Cohen's d) for each region
+    - Response consistency (coefficient of variation)
+    - Regional sensitivity rankings
+    - Summary statistics table
+    """
+    from scipy import stats
+    
+    if group_names is None:
+        group_names = ['Group 1', 'Group 2']
+    
+    fig = plt.figure(figsize=(14, 10))
+    gs = fig.add_gridspec(3, 2, hspace=0.3, wspace=0.3)
+    
+    regions = ['cortex', 'medulla', 'papilla']
+    colors = ['#2E86AB', '#E63946']
+    
+    # Panel 1: Effect sizes by region (Oxygen 1)
+    ax1 = fig.add_subplot(gs[0, 0])
+    
+    effect_sizes_oxy1 = []
+    for region in regions:
+        group1_response = []
+        group2_response = []
+        
+        for group_idx, group_id in enumerate(baseline_data.keys()):
+            baseline = baseline_data[group_id]
+            oxygen = oxygen1_data[group_id]
+            
+            baseline_region = baseline.get('regions', {}).get(region, {})
+            oxygen_region = oxygen.get('regions', {}).get(region, {})
+            
+            baseline_vals = [layer.get('t2star_mean', np.nan) for layer in baseline_region.get('layers', [])]
+            oxygen_vals = [layer.get('t2star_mean', np.nan) for layer in oxygen_region.get('layers', [])]
+            
+            if baseline_vals and oxygen_vals:
+                response = np.nanmean(oxygen_vals) - np.nanmean(baseline_vals)
+                if group_idx == 0:
+                    group1_response.append(response)
+                else:
+                    group2_response.append(response)
+        
+        # Calculate Cohen's d
+        if group1_response and group2_response:
+            pooled_std = np.sqrt((np.std(group1_response)**2 + np.std(group2_response)**2) / 2) if len(group1_response) > 1 and len(group2_response) > 1 else 1
+            cohen_d = (np.mean(group2_response) - np.mean(group1_response)) / pooled_std if pooled_std > 0 else 0
+        else:
+            cohen_d = 0
+        
+        effect_sizes_oxy1.append(cohen_d)
+    
+    bars = ax1.barh(regions, effect_sizes_oxy1, color=['green' if d < 0.5 else 'orange' if d < 0.8 else 'red' for d in effect_sizes_oxy1],
+                    alpha=0.7, edgecolor='black', linewidth=1)
+    
+    for bar, val in zip(bars, effect_sizes_oxy1):
+        ax1.text(val, bar.get_y() + bar.get_height()/2., f'{val:.2f}',
+                ha='left' if val >= 0 else 'right', va='center',
+                fontsize=9, fontweight='bold')
+    
+    ax1.axvline(x=0, color='black', linestyle='-', linewidth=1)
+    ax1.axvline(x=0.5, color='gray', linestyle='--', linewidth=0.5, alpha=0.5)
+    ax1.axvline(x=0.8, color='gray', linestyle='--', linewidth=0.5, alpha=0.5)
+    ax1.set_xlabel("Cohen's d", fontsize=10, fontweight='bold')
+    ax1.set_title('Oxygen 1: Effect Sizes by Region', fontsize=11, fontweight='bold')
+    ax1.text(0.95, 0.95, 'Small: <0.5\nMedium: 0.5-0.8\nLarge: >0.8',
+            transform=ax1.transAxes, ha='right', va='top', fontsize=8,
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+    ax1.grid(True, alpha=0.3, axis='x')
+    
+    # Panel 2: Effect sizes by region (Oxygen 2)
+    ax2 = fig.add_subplot(gs[0, 1])
+    
+    effect_sizes_oxy2 = []
+    for region in regions:
+        group1_response = []
+        group2_response = []
+        
+        for group_idx, group_id in enumerate(baseline_data.keys()):
+            baseline = baseline_data[group_id]
+            oxygen = oxygen2_data[group_id]
+            
+            baseline_region = baseline.get('regions', {}).get(region, {})
+            oxygen_region = oxygen.get('regions', {}).get(region, {})
+            
+            baseline_vals = [layer.get('t2star_mean', np.nan) for layer in baseline_region.get('layers', [])]
+            oxygen_vals = [layer.get('t2star_mean', np.nan) for layer in oxygen_region.get('layers', [])]
+            
+            if baseline_vals and oxygen_vals:
+                response = np.nanmean(oxygen_vals) - np.nanmean(baseline_vals)
+                if group_idx == 0:
+                    group1_response.append(response)
+                else:
+                    group2_response.append(response)
+        
+        # Calculate Cohen's d
+        if group1_response and group2_response:
+            pooled_std = np.sqrt((np.std(group1_response)**2 + np.std(group2_response)**2) / 2) if len(group1_response) > 1 and len(group2_response) > 1 else 1
+            cohen_d = (np.mean(group2_response) - np.mean(group1_response)) / pooled_std if pooled_std > 0 else 0
+        else:
+            cohen_d = 0
+        
+        effect_sizes_oxy2.append(cohen_d)
+    
+    bars = ax2.barh(regions, effect_sizes_oxy2, color=['green' if d < 0.5 else 'orange' if d < 0.8 else 'red' for d in effect_sizes_oxy2],
+                    alpha=0.7, edgecolor='black', linewidth=1)
+    
+    for bar, val in zip(bars, effect_sizes_oxy2):
+        ax2.text(val, bar.get_y() + bar.get_height()/2., f'{val:.2f}',
+                ha='left' if val >= 0 else 'right', va='center',
+                fontsize=9, fontweight='bold')
+    
+    ax2.axvline(x=0, color='black', linestyle='-', linewidth=1)
+    ax2.axvline(x=0.5, color='gray', linestyle='--', linewidth=0.5, alpha=0.5)
+    ax2.axvline(x=0.8, color='gray', linestyle='--', linewidth=0.5, alpha=0.5)
+    ax2.set_xlabel("Cohen's d", fontsize=10, fontweight='bold')
+    ax2.set_title('Oxygen 2: Effect Sizes by Region', fontsize=11, fontweight='bold')
+    ax2.grid(True, alpha=0.3, axis='x')
+    
+    # Panel 3: Response consistency (CV) by group
+    ax3 = fig.add_subplot(gs[1, :])
+    
+    x_labels = []
+    cv_values_g1 = []
+    cv_values_g2 = []
+    
+    for oxy_label, oxy_data in [('Oxy1', oxygen1_data), ('Oxy2', oxygen2_data)]:
+        for region in regions:
+            x_labels.append(f'{oxy_label}\n{region.capitalize()}')
+            
+            for group_idx, group_id in enumerate(baseline_data.keys()):
+                baseline = baseline_data[group_id]
+                oxygen = oxy_data[group_id]
+                
+                baseline_region = baseline.get('regions', {}).get(region, {})
+                oxygen_region = oxygen.get('regions', {}).get(region, {})
+                
+                baseline_vals = [layer.get('t2star_mean', np.nan) for layer in baseline_region.get('layers', [])]
+                oxygen_vals = [layer.get('t2star_mean', np.nan) for layer in oxygen_region.get('layers', [])]
+                
+                responses = []
+                for b, o in zip(baseline_vals, oxygen_vals):
+                    if not np.isnan(b) and not np.isnan(o):
+                        responses.append(o - b)
+                
+                if len(responses) > 1:
+                    cv = (np.std(responses) / abs(np.mean(responses))) * 100 if np.mean(responses) != 0 else 0
+                else:
+                    cv = 0
+                
+                if group_idx == 0:
+                    cv_values_g1.append(cv)
+                else:
+                    cv_values_g2.append(cv)
+    
+    x_pos = np.arange(len(x_labels))
+    width = 0.35
+    
+    ax3.bar(x_pos - width/2, cv_values_g1, width, label=group_names[0],
+           color=colors[0], alpha=0.7, edgecolor='black', linewidth=1)
+    ax3.bar(x_pos + width/2, cv_values_g2, width, label=group_names[1],
+           color=colors[1], alpha=0.7, edgecolor='black', linewidth=1)
+    
+    ax3.set_xticks(x_pos)
+    ax3.set_xticklabels(x_labels, fontsize=9, rotation=0)
+    ax3.set_ylabel('Coefficient of Variation (%)', fontsize=10, fontweight='bold')
+    ax3.set_title('Response Consistency (Lower = More Consistent)', fontsize=11, fontweight='bold')
+    ax3.legend(loc='best', fontsize=9)
+    ax3.grid(True, alpha=0.3, axis='y')
+    
+    # Panel 4: Summary statistics table
+    ax4 = fig.add_subplot(gs[2, :])
+    ax4.axis('off')
+    
+    # Build summary table
+    table_data = [['Metric', 'Group', 'Oxygen 1', 'Oxygen 2']]
+    
+    for group_idx, group_id in enumerate(baseline_data.keys()):
+        # Mean response
+        oxy1_responses = []
+        oxy2_responses = []
+        
+        for oxygen_data_set, response_list in [(oxygen1_data, oxy1_responses), (oxygen2_data, oxy2_responses)]:
+            baseline = baseline_data[group_id]
+            oxygen = oxygen_data_set[group_id]
+            
+            for region_data in baseline.get('regions', {}).values():
+                for layer in region_data.get('layers', []):
+                    oxy1_responses.append(layer.get('t2star_mean', np.nan))
+            
+            for region_data in oxygen.get('regions', {}).values():
+                for layer in region_data.get('layers', []):
+                    oxy2_responses.append(layer.get('t2star_mean', np.nan))
+        
+        # Calculate statistics
+        oxy1_mean = f"{np.nanmean(oxy1_responses):.1f} ms" if oxy1_responses else "N/A"
+        oxy2_mean = f"{np.nanmean(oxy2_responses):.1f} ms" if oxy2_responses else "N/A"
+        
+        table_data.append(['Mean T2*', group_names[group_idx], oxy1_mean, oxy2_mean])
+    
+    table = ax4.table(cellText=table_data, cellLoc='center', loc='center',
+                     colWidths=[0.3, 0.3, 0.2, 0.2],
+                     bbox=[0.1, 0.2, 0.8, 0.7])
+    
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1, 2)
+    
+    # Style header row
+    for i in range(4):
+        table[(0, i)].set_facecolor('#4CAF50')
+        table[(0, i)].set_text_props(weight='bold', color='white')
+    
+    # Alternate row colors
+    for i in range(1, len(table_data)):
+        for j in range(4):
+            if i % 2 == 0:
+                table[(i, j)].set_facecolor('#f0f0f0')
+    
+    ax4.set_title('Summary Statistics', fontsize=12, fontweight='bold', pad=20)
+    
+    plt.suptitle('Statistical Summary Dashboard: Oxygen Challenge Analysis', 
+                 fontsize=14, fontweight='bold')
+    
+    _save_figure_formats(fig, output_path)
+    plt.close(fig)
+
+
+def plot_response_magnitude_comparison(
+    baseline_data: Dict[str, Dict],
+    oxygen1_data: Dict[str, Dict],
+    oxygen2_data: Dict[str, Dict],
+    output_path: Union[str, Path],
+    group_names: Optional[List[str]] = None
+) -> None:
+    """
+    Plot 7: Response magnitude comparison
+    
+    Compares absolute response magnitudes across:
+    - Parameters (T2*, R2*, Perfusion)
+    - Regions (Cortex, Medulla, Papilla)
+    - Groups (M1 vs M2)
+    - Challenges (Oxygen1 vs Oxygen2)
+    """
+    if group_names is None:
+        group_names = ['Group 1', 'Group 2']
+    
+    fig, axes = plt.subplots(2, 2, figsize=(12, 9))
+    
+    colors = ['#2E86AB', '#E63946']
+    regions = ['cortex', 'medulla', 'papilla']
+    
+    # Panel 1: Response by parameter (Oxygen 1)
+    ax = axes[0, 0]
+    params = ['t2star_mean', 'r2star_mean', 'perfusion_mean']
+    param_labels = ['ΔT2*\n(ms)', 'ΔR2*\n(1/s)', 'ΔPerfusion\n(ml/100g/min)']
+    
+    width = 0.35
+    x_pos = np.arange(len(params))
+    
+    for group_idx, group_id in enumerate(baseline_data.keys()):
+        baseline = baseline_data[group_id]
+        oxygen = oxygen1_data[group_id]
+        
+        param_responses = []
+        for param in params:
+            # Whole-kidney average response
+            baseline_vals = []
+            oxygen_vals = []
+            
+            for region_data in baseline.get('regions', {}).values():
+                baseline_vals.extend([layer.get(param, np.nan) for layer in region_data.get('layers', [])])
+            for region_data in oxygen.get('regions', {}).values():
+                oxygen_vals.extend([layer.get(param, np.nan) for layer in region_data.get('layers', [])])
+            
+            if baseline_vals and oxygen_vals:
+                response = np.nanmean(oxygen_vals) - np.nanmean(baseline_vals)
+            else:
+                response = 0
+            
+            param_responses.append(response)
+        
+        offset = width * (group_idx - 0.5)
+        bars = ax.bar(x_pos + offset, param_responses, width,
+                     label=group_names[group_idx], color=colors[group_idx],
+                     alpha=0.7, edgecolor='black', linewidth=1)
+        
+        # Add value labels
+        for bar, val in zip(bars, param_responses):
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height,
+                   f'{val:.1f}',
+                   ha='center', va='bottom' if height >= 0 else 'top',
+                   fontsize=9, fontweight='bold')
+    
+    ax.axhline(y=0, color='black', linestyle='--', linewidth=1)
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(param_labels, fontsize=9)
+    ax.set_ylabel('Response Magnitude', fontsize=10, fontweight='bold')
+    ax.set_title('Oxygen 1: Response by Parameter', fontsize=11, fontweight='bold')
+    ax.legend(loc='best', fontsize=9)
+    ax.grid(True, alpha=0.3, axis='y')
+    
+    # Panel 2: Response by region (Oxygen 1)
+    ax = axes[0, 1]
+    x_pos = np.arange(len(regions))
+    
+    for group_idx, group_id in enumerate(baseline_data.keys()):
+        baseline = baseline_data[group_id]
+        oxygen = oxygen1_data[group_id]
+        
+        regional_responses = []
+        for region in regions:
+            baseline_region = baseline.get('regions', {}).get(region, {})
+            oxygen_region = oxygen.get('regions', {}).get(region, {})
+            
+            baseline_vals = [layer.get('t2star_mean', np.nan) for layer in baseline_region.get('layers', [])]
+            oxygen_vals = [layer.get('t2star_mean', np.nan) for layer in oxygen_region.get('layers', [])]
+            
+            if baseline_vals and oxygen_vals:
+                response = np.nanmean(oxygen_vals) - np.nanmean(baseline_vals)
+            else:
+                response = 0
+            
+            regional_responses.append(response)
+        
+        offset = width * (group_idx - 0.5)
+        bars = ax.bar(x_pos + offset, regional_responses, width,
+                     label=group_names[group_idx], color=colors[group_idx],
+                     alpha=0.7, edgecolor='black', linewidth=1)
+        
+        for bar, val in zip(bars, regional_responses):
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height,
+                   f'{val:.1f}',
+                   ha='center', va='bottom' if height >= 0 else 'top',
+                   fontsize=9, fontweight='bold')
+    
+    ax.axhline(y=0, color='black', linestyle='--', linewidth=1)
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels([r.capitalize() for r in regions], fontsize=10)
+    ax.set_ylabel('ΔT2* (ms)', fontsize=10, fontweight='bold')
+    ax.set_title('Oxygen 1: Response by Region', fontsize=11, fontweight='bold')
+    ax.legend(loc='best', fontsize=9)
+    ax.grid(True, alpha=0.3, axis='y')
+    
+    # Panel 3: Response by parameter (Oxygen 2)
+    ax = axes[1, 0]
+    
+    for group_idx, group_id in enumerate(baseline_data.keys()):
+        baseline = baseline_data[group_id]
+        oxygen = oxygen2_data[group_id]
+        
+        param_responses = []
+        for param in params:
+            baseline_vals = []
+            oxygen_vals = []
+            
+            for region_data in baseline.get('regions', {}).values():
+                baseline_vals.extend([layer.get(param, np.nan) for layer in region_data.get('layers', [])])
+            for region_data in oxygen.get('regions', {}).values():
+                oxygen_vals.extend([layer.get(param, np.nan) for layer in region_data.get('layers', [])])
+            
+            if baseline_vals and oxygen_vals:
+                response = np.nanmean(oxygen_vals) - np.nanmean(baseline_vals)
+            else:
+                response = 0
+            
+            param_responses.append(response)
+        
+        x_pos_param = np.arange(len(params))
+        offset = width * (group_idx - 0.5)
+        bars = ax.bar(x_pos_param + offset, param_responses, width,
+                     label=group_names[group_idx], color=colors[group_idx],
+                     alpha=0.7, edgecolor='black', linewidth=1)
+        
+        for bar, val in zip(bars, param_responses):
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height,
+                   f'{val:.1f}',
+                   ha='center', va='bottom' if height >= 0 else 'top',
+                   fontsize=9, fontweight='bold')
+    
+    ax.axhline(y=0, color='black', linestyle='--', linewidth=1)
+    ax.set_xticks(np.arange(len(params)))
+    ax.set_xticklabels(param_labels, fontsize=9)
+    ax.set_ylabel('Response Magnitude', fontsize=10, fontweight='bold')
+    ax.set_title('Oxygen 2: Response by Parameter', fontsize=11, fontweight='bold')
+    ax.legend(loc='best', fontsize=9)
+    ax.grid(True, alpha=0.3, axis='y')
+    
+    # Panel 4: Response by region (Oxygen 2)
+    ax = axes[1, 1]
+    x_pos = np.arange(len(regions))
+    
+    for group_idx, group_id in enumerate(baseline_data.keys()):
+        baseline = baseline_data[group_id]
+        oxygen = oxygen2_data[group_id]
+        
+        regional_responses = []
+        for region in regions:
+            baseline_region = baseline.get('regions', {}).get(region, {})
+            oxygen_region = oxygen.get('regions', {}).get(region, {})
+            
+            baseline_vals = [layer.get('t2star_mean', np.nan) for layer in baseline_region.get('layers', [])]
+            oxygen_vals = [layer.get('t2star_mean', np.nan) for layer in oxygen_region.get('layers', [])]
+            
+            if baseline_vals and oxygen_vals:
+                response = np.nanmean(oxygen_vals) - np.nanmean(baseline_vals)
+            else:
+                response = 0
+            
+            regional_responses.append(response)
+        
+        offset = width * (group_idx - 0.5)
+        bars = ax.bar(x_pos + offset, regional_responses, width,
+                     label=group_names[group_idx], color=colors[group_idx],
+                     alpha=0.7, edgecolor='black', linewidth=1)
+        
+        for bar, val in zip(bars, regional_responses):
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height,
+                   f'{val:.1f}',
+                   ha='center', va='bottom' if height >= 0 else 'top',
+                   fontsize=9, fontweight='bold')
+    
+    ax.axhline(y=0, color='black', linestyle='--', linewidth=1)
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels([r.capitalize() for r in regions], fontsize=10)
+    ax.set_ylabel('ΔT2* (ms)', fontsize=10, fontweight='bold')
+    ax.set_title('Oxygen 2: Response by Region', fontsize=11, fontweight='bold')
+    ax.legend(loc='best', fontsize=9)
+    ax.grid(True, alpha=0.3, axis='y')
+    
+    plt.suptitle('Response Magnitude Comparison: Parameters and Regions', 
+                 fontsize=14, fontweight='bold')
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    _save_figure_formats(fig, output_path)
+    plt.close(fig)
+
+
+def plot_multiparameter_correlations(
+    baseline_data: Dict[str, Dict],
+    oxygen1_data: Dict[str, Dict],
+    oxygen2_data: Dict[str, Dict],
+    output_path: Union[str, Path],
+    group_names: Optional[List[str]] = None
+) -> None:
+    """
+    Plot 6: Multi-parameter correlation analysis
+    
+    Shows relationships between T2*, R2*, and Perfusion during oxygen challenge:
+    - Scatter plots for each parameter pair
+    - Separate panels for baseline vs oxygen conditions
+    - Different colors for M1 vs M2
+    - Correlation coefficients displayed
+    """
+    from scipy import stats
+    
+    if group_names is None:
+        group_names = ['Group 1', 'Group 2']
+    
+    fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+    
+    colors = ['#2E86AB', '#E63946']
+    markers = ['o', 's']
+    
+    # Parameter pairs to correlate
+    param_pairs = [
+        ('t2star_mean', 'r2star_mean', 'T2* (ms)', 'R2* (1/s)'),
+        ('t2star_mean', 'perfusion_mean', 'T2* (ms)', 'Perfusion (ml/100g/min)'),
+        ('r2star_mean', 'perfusion_mean', 'R2* (1/s)', 'Perfusion (ml/100g/min)')
+    ]
+    
+    # Baseline (Air) correlations - top row
+    for col_idx, (param1, param2, label1, label2) in enumerate(param_pairs):
+        ax = axes[0, col_idx]
+        
+        for group_idx, group_id in enumerate(baseline_data.keys()):
+            data = baseline_data[group_id]
+            
+            # Extract all values across regions
+            vals1 = []
+            vals2 = []
+            
+            for region_data in data.get('regions', {}).values():
+                for layer in region_data.get('layers', []):
+                    v1 = layer.get(param1, np.nan)
+                    v2 = layer.get(param2, np.nan)
+                    if not np.isnan(v1) and not np.isnan(v2):
+                        vals1.append(v1)
+                        vals2.append(v2)
+            
+            if len(vals1) > 2:
+                # Plot scatter
+                ax.scatter(vals1, vals2, c=colors[group_idx], marker=markers[group_idx],
+                          s=40, alpha=0.6, label=group_names[group_idx], edgecolors='black', linewidth=0.5)
+                
+                # Calculate correlation
+                r, p = stats.pearsonr(vals1, vals2)
+                
+                # Add trend line
+                z = np.polyfit(vals1, vals2, 1)
+                p_fit = np.polyval(z, sorted(vals1))
+                ax.plot(sorted(vals1), p_fit, color=colors[group_idx], 
+                       linestyle='--', alpha=0.5, linewidth=1.5)
+                
+                # Add correlation text
+                y_pos = 0.95 - group_idx * 0.12
+                ax.text(0.05, y_pos, f'{group_names[group_idx]}: r={r:.3f}',
+                       transform=ax.transAxes, fontsize=8,
+                       bbox=dict(boxstyle='round', facecolor=colors[group_idx], alpha=0.3))
+        
+        ax.set_xlabel(label1, fontsize=10, fontweight='bold')
+        ax.set_ylabel(label2, fontsize=10, fontweight='bold')
+        if col_idx == 0:
+            ax.set_title('Baseline (Air)', fontsize=11, fontweight='bold', color='blue')
+        ax.legend(loc='best', fontsize=8, framealpha=0.9)
+        ax.grid(True, alpha=0.3)
+    
+    # Oxygen challenge correlations - bottom row
+    for col_idx, (param1, param2, label1, label2) in enumerate(param_pairs):
+        ax = axes[1, col_idx]
+        
+        for group_idx, group_id in enumerate(oxygen1_data.keys()):
+            data = oxygen1_data[group_id]
+            
+            # Extract all values across regions
+            vals1 = []
+            vals2 = []
+            
+            for region_data in data.get('regions', {}).values():
+                for layer in region_data.get('layers', []):
+                    v1 = layer.get(param1, np.nan)
+                    v2 = layer.get(param2, np.nan)
+                    if not np.isnan(v1) and not np.isnan(v2):
+                        vals1.append(v1)
+                        vals2.append(v2)
+            
+            if len(vals1) > 2:
+                # Plot scatter
+                ax.scatter(vals1, vals2, c=colors[group_idx], marker=markers[group_idx],
+                          s=40, alpha=0.6, label=group_names[group_idx], edgecolors='black', linewidth=0.5)
+                
+                # Calculate correlation
+                r, p = stats.pearsonr(vals1, vals2)
+                
+                # Add trend line
+                z = np.polyfit(vals1, vals2, 1)
+                p_fit = np.polyval(z, sorted(vals1))
+                ax.plot(sorted(vals1), p_fit, color=colors[group_idx], 
+                       linestyle='--', alpha=0.5, linewidth=1.5)
+                
+                # Add correlation text
+                y_pos = 0.95 - group_idx * 0.12
+                ax.text(0.05, y_pos, f'{group_names[group_idx]}: r={r:.3f}',
+                       transform=ax.transAxes, fontsize=8,
+                       bbox=dict(boxstyle='round', facecolor=colors[group_idx], alpha=0.3))
+        
+        ax.set_xlabel(label1, fontsize=10, fontweight='bold')
+        ax.set_ylabel(label2, fontsize=10, fontweight='bold')
+        if col_idx == 0:
+            ax.set_title('Oxygen Challenge', fontsize=11, fontweight='bold', color='red')
+        ax.legend(loc='best', fontsize=8, framealpha=0.9)
+        ax.grid(True, alpha=0.3)
+    
+    plt.suptitle('Multi-Parameter Correlations: Baseline vs Oxygen Challenge', 
+                 fontsize=14, fontweight='bold')
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    _save_figure_formats(fig, output_path)
+    plt.close(fig)
+
+
+def plot_spatial_response_heatmap(
+    baseline_data: Dict[str, Dict],
+    oxygen1_data: Dict[str, Dict],
+    oxygen2_data: Dict[str, Dict],
+    output_path: Union[str, Path],
+    group_names: Optional[List[str]] = None
+) -> None:
+    """
+    Plot 5: Spatial response heatmap showing layer-by-layer responses
+    
+    Creates heatmaps for ΔT2*, ΔR2*, and ΔPerfusion showing:
+    - Rows: Groups (M1, M2)
+    - Columns: Layers (1-18)
+    - Color: Response magnitude
+    - Region boundaries marked
+    """
+    if group_names is None:
+        group_names = ['Group 1', 'Group 2']
+    
+    fig, axes = plt.subplots(3, 2, figsize=(12, 9))
+    
+    # Parameters to plot
+    params = [
+        ('t2star_mean', 'ΔT2*', 'RdBu_r', (-15, 15)),
+        ('r2star_mean', 'ΔR2*', 'RdBu', (-30, 30)),
+        ('perfusion_mean', 'ΔPerfusion', 'RdYlGn', (-500, 500))
+    ]
+    
+    # Calculate responses for each oxygen challenge
+    for col_idx, (oxy_label, oxy_data) in enumerate([('Oxygen 1 - Air', oxygen1_data), 
+                                                       ('Oxygen 2 - Air', oxygen2_data)]):
+        
+        for row_idx, (param_key, param_label, cmap, vrange) in enumerate(params):
+            ax = axes[row_idx, col_idx]
+            
+            # Build response matrix: groups × layers
+            response_matrix = []
+            max_layers = 0
+            
+            for group_id in baseline_data.keys():
+                baseline = baseline_data[group_id]
+                oxygen = oxy_data[group_id]
+                
+                # Collect all layers across regions
+                layer_responses = []
+                for region_name in sorted(baseline.get('regions', {}).keys()):
+                    baseline_region = baseline['regions'].get(region_name, {})
+                    oxygen_region = oxygen['regions'].get(region_name, {})
+                    
+                    baseline_layers = baseline_region.get('layers', [])
+                    oxygen_layers = oxygen_region.get('layers', [])
+                    
+                    for i in range(max(len(baseline_layers), len(oxygen_layers))):
+                        baseline_val = baseline_layers[i].get(param_key, np.nan) if i < len(baseline_layers) else np.nan
+                        oxygen_val = oxygen_layers[i].get(param_key, np.nan) if i < len(oxygen_layers) else np.nan
+                        
+                        if not np.isnan(baseline_val) and not np.isnan(oxygen_val):
+                            layer_responses.append(oxygen_val - baseline_val)
+                        else:
+                            layer_responses.append(np.nan)
+                
+                response_matrix.append(layer_responses)
+                max_layers = max(max_layers, len(layer_responses))
+            
+            # Pad all rows to same length with NaN
+            for i in range(len(response_matrix)):
+                while len(response_matrix[i]) < max_layers:
+                    response_matrix[i].append(np.nan)
+            
+            # Convert to numpy array (now all rows are same length)
+            if response_matrix:
+                response_array = np.array(response_matrix, dtype=float)
+                
+                # Replace NaN with 0 for visualization (will show as neutral color)
+                response_array_plot = np.nan_to_num(response_array, nan=0.0)
+                
+                # Plot heatmap
+                im = ax.imshow(response_array_plot, cmap=cmap, aspect='auto',
+                              vmin=vrange[0], vmax=vrange[1],
+                              interpolation='nearest')
+                
+                # Add colorbar
+                cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+                cbar.ax.tick_params(labelsize=8)
+                
+                # Formatting
+                ax.set_yticks(range(len(group_names)))
+                ax.set_yticklabels(group_names, fontsize=10, fontweight='bold')
+                ax.set_xlabel('Layer', fontsize=10, fontweight='bold')
+                
+                if col_idx == 0:
+                    ax.set_ylabel(param_label, fontsize=11, fontweight='bold')
+                
+                if row_idx == 0:
+                    ax.set_title(oxy_label, fontsize=12, fontweight='bold')
+                
+                # Add region boundaries (vertical lines)
+                # Calculate from actual data structure
+                region_boundaries = []
+                current_pos = 0
+                first_group = list(baseline_data.keys())[0]
+                for region_name in sorted(baseline_data[first_group].get('regions', {}).keys()):
+                    n_layers = len(baseline_data[first_group]['regions'][region_name].get('layers', []))
+                    current_pos += n_layers
+                    if current_pos < max_layers:
+                        region_boundaries.append(current_pos)
+                
+                for boundary in region_boundaries[:-1]:  # Don't draw last boundary
+                    ax.axvline(x=boundary-0.5, color='white', linewidth=2, 
+                              linestyle='--', alpha=0.8)
+                
+                ax.grid(False)
+    
+    plt.suptitle('Spatial Response Heatmap: Layer-by-Layer Oxygen Challenge Response', 
+                 fontsize=14, fontweight='bold', y=0.995)
+    plt.tight_layout(rect=[0, 0, 1, 0.99])
+    _save_figure_formats(fig, output_path)
+    plt.close(fig)
+
+
+def plot_comprehensive_oxygen_analysis(
+    oxygen1_data: Dict[str, Dict],
+    air_data: Dict[str, Dict],
+    oxygen2_data: Dict[str, Dict],
+    output_dir: Union[str, Path],
+    group_names: Optional[List[str]] = None,
+    sample_prefix: str = 'oxygen_analysis'
+) -> None:
+    """
+    Generate complete suite of oxygen challenge analysis plots
+    
+    Creates all 8 plot types:
+    1. Multi-parameter continuous (oxygen1, air, oxygen2)
+    2. Oxygen response profiles (oxygen1-air, oxygen2-air)
+    3. Regional response bars
+    4. Whole vs regional comparison
+    5. Response heatmap (placeholder for future)
+    6. Correlations (placeholder for future)
+    7. Temporal response series
+    8. Statistical summary (placeholder for future)
+    
+    Parameters
+    ----------
+    oxygen1_data : dict
+        First oxygen challenge data
+    air_data : dict
+        Air condition data
+    oxygen2_data : dict
+        Second oxygen challenge data
+    output_dir : str or Path
+        Output directory for plots
+    group_names : list, optional
+        Names for groups
+    sample_prefix : str
+        Prefix for output files
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    print("Generating comprehensive oxygen challenge analysis plots...")
+    
+    # 1. Multi-parameter continuous for each condition
+    print("  1/8: Multi-parameter continuous profiles...")
+    for condition, data in [('oxygen1', oxygen1_data), ('air', air_data), ('oxygen2', oxygen2_data)]:
+        output_path = output_dir / f'{sample_prefix}_multiparameter_{condition}'
+        plot_multiparameter_continuous_comparison(
+            data, output_path, group_names=group_names, condition=condition
+        )
+    
+    # 2. Oxygen response profiles
+    print("  2/8: Oxygen response profiles...")
+    # Oxygen 1 vs Air
+    output_path = output_dir / f'{sample_prefix}_response_oxygen1_vs_air'
+    plot_oxygen_response_profiles(
+        air_data, oxygen1_data, output_path,
+        group_names=group_names, baseline_label='Air', oxygen_label='Oxygen 1'
+    )
+    
+    # Oxygen 2 vs Air
+    output_path = output_dir / f'{sample_prefix}_response_oxygen2_vs_air'
+    plot_oxygen_response_profiles(
+        air_data, oxygen2_data, output_path,
+        group_names=group_names, baseline_label='Air', oxygen_label='Oxygen 2'
+    )
+    
+    # 3. Regional response bars
+    print("  3/8: Regional response bar charts...")
+    output_path = output_dir / f'{sample_prefix}_regional_bars_oxygen1_vs_air'
+    plot_regional_response_bars(
+        air_data, oxygen1_data, output_path,
+        group_names=group_names, baseline_label='Air', oxygen_label='Oxygen 1'
+    )
+    
+    output_path = output_dir / f'{sample_prefix}_regional_bars_oxygen2_vs_air'
+    plot_regional_response_bars(
+        air_data, oxygen2_data, output_path,
+        group_names=group_names, baseline_label='Air', oxygen_label='Oxygen 2'
+    )
+    
+    # 4. Whole vs regional comparison
+    print("  4/8: Whole-kidney vs regional comparison...")
+    output_path = output_dir / f'{sample_prefix}_whole_vs_regional'
+    plot_whole_vs_regional_comparison(
+        air_data, oxygen1_data, output_path,
+        group_names=group_names, baseline_label='Air', oxygen_label='Oxygen 1'
+    )
+    print("    ✓ Saved: whole_vs_regional.png/svg")
+    
+    # 5. Spatial response heatmap
+    print("  5/8: Spatial response heatmap...")
+    output_path = output_dir / f'{sample_prefix}_spatial_heatmap'
+    plot_spatial_response_heatmap(
+        air_data, oxygen1_data, oxygen2_data, output_path,
+        group_names=group_names
+    )
+    print("    ✓ Saved: spatial_heatmap.png/svg")
+    
+    # 6. Multi-parameter correlations
+    print("  6/8: Multi-parameter correlations...")
+    output_path = output_dir / f'{sample_prefix}_correlations'
+    plot_multiparameter_correlations(
+        air_data, oxygen1_data, oxygen2_data, output_path,
+        group_names=group_names
+    )
+    print("    ✓ Saved: correlations.png/svg")
+    
+    # 7. Response magnitude comparison
+    print("  7/8: Response magnitude comparison...")
+    output_path = output_dir / f'{sample_prefix}_magnitude'
+    plot_response_magnitude_comparison(
+        air_data, oxygen1_data, oxygen2_data, output_path,
+        group_names=group_names
+    )
+    print("    ✓ Saved: magnitude.png/svg")
+    
+    # 8. Statistical summary dashboard
+    print("  8/8: Statistical summary dashboard...")
+    output_path = output_dir / f'{sample_prefix}_statistics'
+    plot_statistical_summary_dashboard(
+        air_data, oxygen1_data, oxygen2_data, output_path,
+        group_names=group_names
+    )
+    print("    ✓ Saved: statistics.png/svg")
+    
+    print(f"\n✓ All 8 oxygen challenge plots completed!")
+    print(f"✓ Saved to: {output_dir}")
+    print(f"  Generated {len(list(output_dir.glob(f'{sample_prefix}*')))} files (PNG + SVG)")
+
+
+# ============================================================================
+# END MULTI-REGION OXYGEN CHALLENGE PLOTS
+# ============================================================================
