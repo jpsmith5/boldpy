@@ -440,12 +440,57 @@ brew install python-tk
 
 ---
 
+## Step 5: Project-Level Group Analysis
+
+After running `boldpy_analyze.py` for all samples, three project-level scripts aggregate results across groups. All are configured via a single `groups_config.json` file (see `examples/groups_config.json` for a complete template):
+
+```json
+{
+  "output_dir": "processed/analysis/my_experiment",
+  "hematology_csv": null,
+  "groups": {
+    "Control (n=2)": {
+      "ids":   ["sample_ctrl_1", "sample_ctrl_2"],
+      "color": "#E74C3C", "ls": "--", "lw": 1.8, "zorder": 4,
+      "label": "Control", "short": "Ctrl"
+    },
+    "Treatment (n=3)": {
+      "ids":   ["sample_trt_1", "sample_trt_2", "sample_trt_3"],
+      "color": "#2E86C1", "ls": "-", "lw": 2.0, "zorder": 3,
+      "label": "Treatment", "short": "Trt"
+    }
+  }
+}
+```
+
+```bash
+# MLCO layer profiles (mean ± SEM per layer, Mann-Whitney tests, zone summary stats)
+python group_analysis.py --config groups_config.json
+
+# K-means zone overlays + MLCO layer overlays + zone statistics dot-plot
+python overlay_analysis.py --config groups_config.json
+
+# Within-layer heterogeneity profiles + focal disruption analysis
+python heterogeneity.py --config groups_config.json
+```
+
+| Script | Key Outputs |
+|--------|-------------|
+| `group_analysis.py` | T2*/R2*/perfusion layer profiles per group, `zone_summary_stats.json` |
+| `overlay_analysis.py` | Per-sample overlay figures, cross-sample grid figures, zone dot-plot |
+| `heterogeneity.py` | T2* std/CV profiles, OC strip plots, spatial CV maps |
+
+For k-means zone clustering in `boldpy_analyze.py` (per-sample or shared reference), see [K-Means Zone Clustering](kmeans-zone-clustering.md).
+
+---
+
 ## Next Steps
 
-- **[User Guide](user-guide/overview.md)** - Complete feature documentation
-- **[ROI Generation Guide](user-guide/roi-generation.md)** - Advanced ROI techniques
-- **[Interpretation Guide](user-guide/interpretation.md)** - Understanding results
-- **[Examples](examples/kidney-analysis.md)** - Detailed tutorials
+- **[User Guide](user-guide.md)** — Complete workflow and feature reference
+- **[Scripts Reference](scripts-reference.md)** — All scripts documented with full options
+- **[K-Means Zone Clustering](kmeans-zone-clustering.md)** — Data-driven zone boundaries
+- **[Examples with Data](examples-with-data.md)** — Expected outputs and interpretation
+- **[Metrics Documentation](metrics-documentation.md)** — Understanding T2*, R2*, perfusion
 
 ---
 
@@ -457,4 +502,4 @@ brew install python-tk
 
 ---
 
-**Ready to analyze!** 🚀
+**Ready to analyze!**

@@ -160,6 +160,141 @@ python boldpy_analyze.py --group1-config wt.json --group2-config ko.json --compa
 
 ---
 
+## Project Analysis Scripts
+
+These scripts operate at the **project level** — they read pre-computed per-sample analysis JSONs produced by `boldpy_analyze.py` and generate cross-group figures and statistics. They are all configured via a shared `groups_config.json` file (see `examples/groups_config.json` for a template).
+
+**groups_config.json format:**
+```json
+{
+  "output_dir": "processed/analysis/my_experiment",
+  "hematology_csv": "data/hematology.csv",
+  "groups": {
+    "Control (n=2)": {
+      "ids":    ["sample_ctrl_1", "sample_ctrl_2"],
+      "color":  "#E74C3C",
+      "ls":     "--",
+      "lw":     1.8,
+      "zorder": 4,
+      "label":  "Control",
+      "short":  "Ctrl"
+    },
+    "Treatment (n=3)": {
+      "ids":    ["sample_trt_1", "sample_trt_2", "sample_trt_3"],
+      "color":  "#2E86C1",
+      "ls":     "-",
+      "lw":     2.0,
+      "zorder": 3,
+      "label":  "Treatment",
+      "short":  "Trt"
+    }
+  }
+}
+```
+
+All three scripts can also be used programmatically by patching their `GROUPS` and `OUTPUT_DIR` module globals directly (see `examples/` for driver script examples).
+
+---
+
+### `group_analysis.py`
+**Purpose:** Group-level MLCO profile comparison — the project-level complement to `boldpy_analyze.py`
+
+**Usage:**
+```bash
+python group_analysis.py --config groups_config.json
+```
+
+**What it does:**
+- Reads per-sample `{sample_id}_complete_analysis.json` files from `processed/analysis/{id}/`
+- Computes mean ± SEM per MLCO layer across all samples in each group
+- Generates T2*, R2*, and perfusion comparison profiles with zone shading
+- Runs Mann-Whitney U tests between groups at each layer
+- Produces optional hematology (HCT) comparison figure if `hematology_csv` is provided
+- Exports zone-level summary statistics as JSON
+
+**Key Options:**
+- `--config PATH`: Path to groups_config.json (required)
+
+**Outputs** (all in `{output_dir}/`):
+- `{cond}_t2star_profile.png/.svg` — T2* layer profiles, one per condition
+- `{cond}_r2star_profile.png/.svg` — R2* layer profiles
+- `{cond}_perfusion_profile.png/.svg` — Perfusion layer profiles
+- `hematology_comparison.png` — HCT figure (if hematology_csv provided)
+- `zone_summary_stats.json` — Zone-level mean ± SEM + p-values per group
+
+---
+
+### `overlay_analysis.py`
+**Purpose:** K-means zone overlays, MLCO layer overlays, and zone statistics — consolidated in one script
+
+**Usage:**
+```bash
+python overlay_analysis.py --config groups_config.json
+```
+
+**What it does** (three sequential steps):
+
+1. **Per-sample overlay figures** — For each sample × condition, produces:
+   - A 3-panel k-means figure: T2* map | k-means zone map | transparent overlay
+   - A 3-panel MLCO figure: T2* map | color-coded MLCO layers | transparent overlay
+   K-means is computed once per sample and reused for both figure types.
+
+2. **Grid figures** — Cross-sample comparison grids showing all samples side-by-side per condition:
+   - `kmeans_overlay_grid_{cond}.png` — All samples' k-means overlays in a grid (rows = groups, cols = samples)
+   - `mlco_overlay_grid_{cond}.png` — All samples' MLCO layer overlays in the same layout
+
+3. **Zone analysis summary** — A dot-plot figure comparing k-means zone statistics (T2* mean, T2* std, perfusion) between groups, with Mann-Whitney p-values.
+
+**Key Options:**
+- `--config PATH`: Path to groups_config.json (required)
+
+**Outputs**:
+- `{analysis_dir}/{sid}/kmeans/{sid}_kmeans_{cond}.png/.svg` — Per-sample k-means overlays
+- `{analysis_dir}/{sid}/mlco/{sid}_mlco_{cond}.png/.svg` — Per-sample MLCO overlays
+- `{output_dir}/kmeans_overlay_grid_{cond}.png/.svg` — K-means grid per condition
+- `{output_dir}/mlco_overlay_grid_{cond}.png/.svg` — MLCO grid per condition
+- `{output_dir}/kmeans_zone_analysis.png/.pdf/.svg` — Zone statistics dot-plot
+
+---
+
+### `heterogeneity.py`
+**Purpose:** Within-layer heterogeneity profiling and focal disruption analysis
+
+**Usage:**
+```bash
+python heterogeneity.py --config groups_config.json
+```
+
+**What it does** (two sequential parts):
+
+**Part 1 — Heterogeneity Profiles:**
+- Computes per-layer T2* std, CV (coefficient of variation), IQR, and skewness for every sample and condition
+- Builds group-level mean ± SEM profiles across MLCO layers
+- Generates overview figures (T2* std and CV vs. layer with zone shading)
+- Generates a "talk summary" panel comparing air vs. oxygen conditions
+- Generates outer cortex bar charts with individual data points and statistical annotations
+
+**Part 2 — Focal Disruption:**
+- Extracts outer cortex pixel-level T2* distributions per sample per condition
+- Performs Mann-Whitney U test on the pooled pixel distributions
+- Generates strip plots and KDE distribution plots of pixel-level T2* values
+- Computes spatial local coefficient-of-variation (CV) maps (5×5 neighborhood)
+- Generates spatial CV map panels showing per-sample maps and group difference maps
+
+**Key Options:**
+- `--config PATH`: Path to groups_config.json (required)
+
+**Outputs** (all in `{output_dir}/heterogeneity/`):
+- `heterogeneity_overview.png/.svg` — T2* std and CV layer profiles per group
+- `talk_summary.png/.svg` — Air vs. oxygen summary panel
+- `outer_cortex_bars.png/.svg` — OC T2* std bar chart with data points
+- `strip_plots.png/.svg` — Per-pixel OC T2* strip plots
+- `kde_distributions.png/.svg` — KDE distributions of OC pixel T2*
+- `spatial_cv_maps.png/.svg` — Spatial local-CV maps per sample and group difference
+- `focal_disruption_stats.json` — All statistics and p-values
+
+---
+
 ## Supporting Scripts
 
 ### `fit_t2star.py`

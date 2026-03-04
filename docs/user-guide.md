@@ -1,6 +1,6 @@
 # Comprehensive User Guide
 
-This guide provides in-depth information on using BoldPy v2.1.1 for BOLD MRI analysis with MLCO (Multi-Layer Concentric Object) framework.
+This guide provides in-depth information on using BoldPy v2.3.1 for BOLD MRI analysis with MLCO (Multi-Layer Concentric Object) framework.
 
 ---
 
@@ -225,6 +225,31 @@ python boldpy_analyze.py \
 - `--n-layers 24`: Must match MLCO generation
 - `--config`: Single sample analysis
 - `--group1-config`, `--group2-config`, `--compare`: Group comparison
+
+---
+
+---
+
+## Step 5: Project-Level Analysis
+
+After running `boldpy_analyze.py` for each sample, three project-level scripts aggregate results across groups. All are configured via a `groups_config.json` file:
+
+```bash
+# Template: see examples/groups_config.json
+python group_analysis.py   --config groups_config.json   # Group MLCO profiles
+python overlay_analysis.py --config groups_config.json   # K-means + MLCO overlays
+python heterogeneity.py    --config groups_config.json   # Heterogeneity analysis
+```
+
+**groups_config.json** specifies the output directory, optional hematology CSV, and per-group sample IDs, colors, and line styles. See `examples/groups_config.json` for a complete template.
+
+| Script | Purpose |
+|--------|---------|
+| `group_analysis.py` | Mean ± SEM MLCO profiles, Mann-Whitney tests, zone summary stats |
+| `overlay_analysis.py` | K-means zone overlays, MLCO layer overlays, zone statistics dot-plot |
+| `heterogeneity.py` | T2* std/CV/IQR profiles, outer cortex pixel distributions, spatial CV maps |
+
+See [Scripts Reference → Project Analysis Scripts](scripts-reference.md#project-analysis-scripts) for full documentation.
 
 ---
 

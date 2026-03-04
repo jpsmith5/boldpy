@@ -314,8 +314,8 @@ docker run -it -v $(pwd)/data:/data boldpy:latest
 After installation:
 
 1. **[Quick Start Guide](quick-start.md)** - Run your first analysis
-2. **[User Guide](user-guide/overview.md)** - Learn about features
-3. **[Examples](examples/basic-analysis.md)** - Follow step-by-step tutorials
+2. **[User Guide](user-guide.md)** - Complete workflow and feature reference
+3. **[Examples with Data](examples-with-data.md)** - Expected outputs and interpretation
 
 ---
 
@@ -323,7 +323,7 @@ After installation:
 
 If you encounter installation issues:
 
-1. Check the [Troubleshooting Guide](examples/troubleshooting.md)
+1. Check the troubleshooting section in [User Guide](user-guide.md)
 2. Search [GitHub Issues](https://github.com/yourusername/boldpy/issues)
 3. Ask in [GitHub Discussions](https://github.com/yourusername/boldpy/discussions)
 4. Email: your.email@institution.edu

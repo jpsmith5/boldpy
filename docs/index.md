@@ -1,6 +1,6 @@
 # BoldPy Documentation
 
-**Tissue-Agnostic BOLD MRI Analysis Framework v2.2.1**
+**Tissue-Agnostic BOLD MRI Analysis Framework v2.3.1**
 
 Welcome to BoldPy, a comprehensive Python framework for analyzing Blood Oxygen Level Dependent (BOLD) MRI data across multiple tissue types.
 
@@ -19,6 +19,8 @@ BoldPy provides tools for:
 - **Publication-ready visualization** with 18 plotting functions
 - **Flexible data processing** (Bruker's processing or custom fitting)
 - **Robust data handling** (automatic handling of missing layers)
+- **Data-driven zone clustering** via k-means on per-layer T2*/R2*/perfusion medians
+- **Project-level analysis scripts** for group comparison, overlay visualization, and heterogeneity analysis
 
 ---
 
@@ -61,6 +63,24 @@ BoldPy provides tools for:
 
 ---
 
+## What's New in v2.3.1
+
+### Consolidated Project Analysis Scripts
+
+Three generic, config-driven project-level analysis scripts replace the previous collection of hardcoded single-use scripts. All three accept a `--config groups_config.json` argument and work with any experiment:
+
+- **`group_analysis.py`** — Cross-group MLCO profile comparison (T2*, R2*, perfusion mean ± SEM per layer with Mann-Whitney statistics and zone summary)
+- **`overlay_analysis.py`** — K-means zone overlays + MLCO layer overlays + zone statistics dot-plot in one pass
+- **`heterogeneity.py`** — Within-layer T2* heterogeneity profiling + focal disruption analysis (pixel distributions, spatial CV maps)
+
+See `examples/groups_config.json` for the config template and [Scripts Reference](scripts-reference.md#project-analysis-scripts) for full documentation.
+
+### K-Means Zone Clustering (v2.3.0)
+
+Data-driven zone boundary detection via `--cluster-zones` flag in `boldpy_analyze.py`. See [K-Means Zone Clustering](kmeans-zone-clustering.md) for details.
+
+---
+
 ## What's New in v2.2.1
 
 ### Tiered T2* Frame Detection
@@ -94,11 +114,9 @@ See [Changelog](../CHANGELOG.md) for complete details.
 **Try BoldPy in 30 seconds with tutorial data:**
 
 ```bash
-# Extract package
-tar -xzf boldpy_v2.2.1_RELEASE.tar.gz
-cd boldpy_v2.2.1_RELEASE
-
-# Install
+# Clone and install
+git clone https://github.com/yourusername/boldpy
+cd boldpy
 pip install -e .
 
 # Run tutorial analysis (works immediately!)
@@ -176,53 +194,51 @@ suggests tissue edema with impaired blood flow.
 
 ---
 
-## Documentation Structure
+## Documentation
 
 ### Getting Started
-- **[Installation](installation.md)** - Setup instructions
-- **[Quick Start](quick-start.md)** - Get running in 5 minutes
-- **[User Guide](user-guide/overview.md)** - Comprehensive guide
+- **[Installation](installation.md)** — Setup instructions and requirements
+- **[Quick Start](quick-start.md)** — Full 5-step workflow from raw data to group analysis
+- **[User Guide](user-guide.md)** — Comprehensive per-sample and project-level workflow
 
 ### Reference
-- **[API Documentation](reference/api.md)** - Function reference
-- **[Configuration](reference/config-files.md)** - Config file format
-- **[Parameters](reference/parameters.md)** - All parameters explained
-- **[Output Format](reference/output-format.md)** - Understanding results
+- **[Scripts Reference](scripts-reference.md)** — All scripts documented (pipeline + project-level analysis)
+- **[K-Means Zone Clustering](kmeans-zone-clustering.md)** — Data-driven zone boundaries (v2.3.0+)
+- **[Metrics Documentation](metrics-documentation.md)** — T2*, R2*, perfusion, and heterogeneity metrics
 
-### Examples & Tutorials
-- **[Basic Analysis](examples/basic-analysis.md)** - Step-by-step tutorial
-- **[WT vs KO Comparison](examples/wt-vs-ko.md)** - Group comparison
-- **[Troubleshooting](examples/troubleshooting.md)** - Common issues
+### Examples
+- **[Examples with Data](examples-with-data.md)** — Expected outputs and result interpretation
 
-### Development
-- **[Contributing](development/contributing.md)** - How to contribute
-- **[Architecture](development/architecture.md)** - Code structure
-- **[Testing](development/testing.md)** - Running tests
+### Changelog
+- **[Changelog](../CHANGELOG.md)** — Complete version history
 
 ---
 
 ## Recent Updates
 
-### Version 2.1.0 (2026-01-15)
+### Version 2.3.1 (2026-03-04)
 
-**Major enhancements:**
-- ✨ **prepare_data.py** - Complete data extraction from Bruker PvDatasets
-  - Custom T2* fitting with 100% pixel success rate
-  - Bruker T2* extraction with smart frame detection
-  - Reference image extraction for ROI drawing
-  - Batch processing support
-- 🔧 **generate_mlco.py** - Generic organ support with bilateral splitting
-  - Flexible `--mask --split` arguments for any bilateral organ
-  - MRI left-right flip convention (configurable)
-  - Custom component naming (e.g., medial/lateral, lung1/lung2)
-  - Single or bilateral organ support
-- 🔬 24-layer MLCO analysis (upgraded from 12 layers)
-- 📊 Perfusion integration with T2* and R2* analysis
-- 🎨 Enhanced plotting suite with multiple visualization types
-- 🛠️ Dual data source options (Bruker vs nonlinear fitting)
-- 📋 Tissue quality assessment and viability classification
+**Script consolidation:**
+- `group_analysis.py` — Cross-group MLCO profiles, Mann-Whitney stats, zone summary
+- `overlay_analysis.py` — K-means + MLCO overlay visualization in one script
+- `heterogeneity.py` — Within-layer heterogeneity + focal disruption analysis
+- `examples/groups_config.json` — Template config for all project-level scripts
 
-→ **[Full Changelog](changelog.md)**
+### Version 2.3.0 (2026-02-17)
+
+**K-means zone clustering:**
+- Data-driven zone boundary detection (`--cluster-zones`)
+- Shared reference workflow (`--cluster-reference`) for valid group comparisons
+- Silhouette scoring and diagnostic plots
+
+### Version 2.2.x (2026-01-20 to 2026-01-27)
+
+- Tiered T2* frame detection (metadata → heuristic → manual `--t2-frame N`)
+- Continuous whole-kidney visualization
+- Oxygen challenge plotting suite
+- YAML-based zone and threshold configuration system
+
+→ **[Full Changelog](../CHANGELOG.md)**
 
 ---
 
@@ -249,11 +265,8 @@ BoldPy has been used in studies investigating:
 
 ### Contributing
 
-We welcome contributions! See our **[Contributing Guide](development/contributing.md)** for:
-- Reporting bugs
-- Suggesting features
-- Submitting code
-- Improving documentation
+Contributions welcome — bug reports, feature suggestions, and pull requests are all appreciated.
+Please open an issue on [GitHub](https://github.com/yourusername/boldpy/issues) to get started.
 
 ---
 
