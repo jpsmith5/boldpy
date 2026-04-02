@@ -1,5 +1,5 @@
 {
-  "_comment": "Example groups config for BoldPy analysis scripts (group_compare.py, heterogeneity_analysis.py, focal_disruption.py, kmeans_overlay.py, kmeans_zone_analysis.py, mlco_overlay.py).",
+  "_comment": "DEPRECATED: This format is superseded by PEP project_config.yaml + sample_table.csv in v3.0.0. See pipeline/examples/project_config.yaml.",
   "output_dir": "processed/analysis/my_experiment",
   "hematology_csv": null,
   "groups": {

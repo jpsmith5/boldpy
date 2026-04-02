@@ -161,8 +161,6 @@ if roi_path.exists():
 else:
     print(f"\n  Draw ROI next:")
     print(f"    cd {script_root}")
-    print(f"    # First generate contrast variants and pick the clearest:")
-    print(f"    python make_draw_refs.py {sid}")
     print(f"    python roi_drawer.py \\")
     print(f"        --pick '{prep_dir}' \\")
     print(f"        --output '{roi_path}' \\")
