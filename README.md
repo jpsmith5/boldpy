@@ -153,7 +153,7 @@ python boldpy_analyze.py --config sample_config.json \
 ### Project-Level Analysis (Step 5)
 
 After running `boldpy_analyze.py` for all samples, create a `project_config.yaml`
-(see `examples/project_config.yaml`) and run:
+(see `pipeline/examples/project_config.yaml`) and run:
 
 ```bash
 python group_analysis.py   --pep project_config.yaml
@@ -187,7 +187,7 @@ mkdocs serve
 ## Repository Layout
 
 ```
-boldpy_v3.0.0/
+boldpy/
 ├── boldpy_analyze.py              # Per-sample pipeline orchestrator
 ├── prepare_data.py                # Data extraction (Bruker PvDatasets)
 ├── prepare_dicom.py               # Data extraction (DICOM)
@@ -203,9 +203,20 @@ boldpy_v3.0.0/
 ├── heterogeneity.py               # Project: heterogeneity analysis
 ├── fit_t2star.py                  # Standalone T2* fitting
 ├── roi_format_utils.py            # ROI format utilities
-├── src/boldpy/                    # Python package library
+├── boldpy/                        # Python package (pip-installable)
+│   ├── analysis/                  # Perfusion analysis
+│   ├── fitting/                   # T2*/R2* curve fitting
+│   └── loaders/                   # Bruker PvDatasets + DICOM loaders
+├── pipeline/                      # Looper/PyPiper pipeline wrappers
+│   ├── boldpy_pipeline.py         # Per-sample pipeline entry point
+│   ├── boldpy_prepare.py          # Data extraction pipeline entry point
+│   ├── boldpy_collate.py          # Project-level collation entry point
+│   ├── boldpy_*_interface.yaml    # Looper pipeline interface definitions
+│   ├── boldpy_pep_schema.yaml     # Sample table validation schema
+│   ├── boldpy_pipestat_schema.yaml# Pipestat result schema
+│   └── examples/                  # PEP config templates (copy and edit)
 ├── configs/                       # Zone and threshold YAML configs
-├── examples/                      # Tutorial data + project_config.yaml template
+├── examples/                      # Tutorial data and example configs
 └── docs/                          # Documentation (mkdocs)
 ```
 
@@ -218,10 +229,10 @@ If you use BoldPy in your research, please cite:
 ```bibtex
 @software{boldpy2026,
   title   = {BoldPy: Renal BOLD MRI Analysis Framework with MLCO and K-Means Zone Clustering},
-  author  = {Your Name},
+  author  = {Jason Smith},
   year    = {2026},
   version = {3.0.0},
-  url     = {https://github.com/yourusername/boldpy}
+  url     = {https://github.com/jpsmith5/boldpy}
 }
 ```
 
