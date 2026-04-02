@@ -63,11 +63,10 @@ except ImportError:
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 
-BASE         = Path(__file__).resolve().parents[3]
-MLCO_DIR     = BASE / 'processed' / 'mlco'
-PREP_DIR     = BASE / 'processed' / 'prepared'
-ANALYSIS_DIR = BASE / 'processed' / 'analysis'
-OUTPUT_DIR   = ANALYSIS_DIR / 'group_comparison'
+MLCO_DIR     = None   # Set by load_pep_project()
+PREP_DIR     = None   # Set by load_pep_project()
+ANALYSIS_DIR = None   # Set by load_pep_project()
+OUTPUT_DIR   = None   # Set by load_pep_project()
 
 # ── Groups ─────────────────────────────────────────────────────────────────────
 # Populated at runtime via --pep project_config.yaml
@@ -100,10 +99,10 @@ def load_pep_project(pep_path):
         p = Path(val)
         return p if p.is_absolute() else base / p
 
-    OUTPUT_DIR   = _resolve('group_output_dir', BASE / 'processed' / 'analysis' / 'group_comparison')
-    ANALYSIS_DIR = _resolve('analysis_dir', BASE / 'processed' / 'analysis')
-    PREP_DIR     = _resolve('prepared_dir', BASE / 'processed' / 'prepared')
-    MLCO_DIR     = _resolve('mlco_dir',     BASE / 'processed' / 'mlco')
+    OUTPUT_DIR   = _resolve('group_output_dir', base / 'processed' / 'analysis' / 'group_comparison')
+    ANALYSIS_DIR = _resolve('analysis_dir', base / 'processed' / 'analysis')
+    PREP_DIR     = _resolve('prepared_dir', base / 'processed' / 'prepared')
+    MLCO_DIR     = _resolve('mlco_dir',     base / 'processed' / 'mlco')
 
 # ── Parameters ─────────────────────────────────────────────────────────────────
 

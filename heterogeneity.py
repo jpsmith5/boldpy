@@ -47,11 +47,10 @@ from scipy.ndimage import uniform_filter
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 
-BASE       = Path(__file__).resolve().parents[3]
-MLCO_DIR   = BASE / 'processed' / 'mlco'
-PREP_DIR   = BASE / 'processed' / 'prepared'
-ANAL_DIR   = BASE / 'processed' / 'analysis'
-OUTPUT_DIR = BASE / 'processed' / 'analysis' / 'group_comparison' / 'heterogeneity'
+MLCO_DIR   = None   # Set by load_pep_project()
+PREP_DIR   = None   # Set by load_pep_project()
+ANAL_DIR   = None   # Set by load_pep_project()
+OUTPUT_DIR = None   # Set by load_pep_project()
 
 # ── Groups ─────────────────────────────────────────────────────────────────────
 # Populated at runtime via --pep project_config.yaml
@@ -84,11 +83,11 @@ def load_pep_project(pep_path):
         p = Path(val)
         return p if p.is_absolute() else base / p
 
-    out_base   = _resolve('group_output_dir', BASE / 'processed' / 'analysis' / 'group_comparison')
+    out_base   = _resolve('group_output_dir', base / 'processed' / 'analysis' / 'group_comparison')
     OUTPUT_DIR = out_base / 'heterogeneity'
-    ANAL_DIR   = _resolve('analysis_dir', BASE / 'processed' / 'analysis')
-    PREP_DIR   = _resolve('prepared_dir', BASE / 'processed' / 'prepared')
-    MLCO_DIR   = _resolve('mlco_dir',     BASE / 'processed' / 'mlco')
+    ANAL_DIR   = _resolve('analysis_dir', base / 'processed' / 'analysis')
+    PREP_DIR   = _resolve('prepared_dir', base / 'processed' / 'prepared')
+    MLCO_DIR   = _resolve('mlco_dir',     base / 'processed' / 'mlco')
 
 # ── Parameters ─────────────────────────────────────────────────────────────────
 
