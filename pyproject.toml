@@ -5,14 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "boldpy"
 version = "3.0.0"
-description = "Organ-Agnostic BOLD MRI Analysis Framework using Multi-Layer Concentric Objects"
+description = "BOLD MRI Analysis Framework using Multi-Layer Concentric Objects"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
     {name = "Jason Smith", email = "jasonsmith@virginia.edu"}
 ]
-keywords = ["MRI", "BOLD", "kidney", "brain", "analysis", "imaging", "medical"]
+keywords = ["MRI", "BOLD", "kidney", "analysis", "imaging", "medical"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -34,6 +34,7 @@ dependencies = [
     "scikit-learn>=1.0.0",
     "Pillow>=8.0.0",
     "tqdm>=4.60.0",
+    "PyYAML>=5.1",
 ]
 
 [project.optional-dependencies]

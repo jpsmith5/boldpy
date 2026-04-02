@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BoldPy: Organ-Agnostic BOLD MRI Analysis Framework
+BoldPy: BOLD MRI Analysis Framework
 ===================================================
 
 Multi-Layer Concentric Object (MLCO) analysis for BOLD MRI data.
@@ -16,7 +16,7 @@ long_description = (this_directory / "README.md").read_text()
 setup(
     name="boldpy",
     version="3.0.0",
-    description="Organ-Agnostic BOLD MRI Analysis Framework using Multi-Layer Concentric Objects",
+    description="BOLD MRI Analysis Framework using Multi-Layer Concentric Objects",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Jason Smith",
@@ -39,6 +39,7 @@ setup(
         "scikit-learn>=1.0.0",
         "Pillow>=8.0.0",
         "tqdm>=4.60.0",
+        "PyYAML>=5.1",
     ],
     
     # Optional dependencies
@@ -71,7 +72,7 @@ setup(
     ],
     
     # Keywords
-    keywords="MRI BOLD kidney brain analysis imaging medical",
+    keywords="MRI BOLD kidney analysis imaging medical",
     
     # Include package data
     include_package_data=True,
