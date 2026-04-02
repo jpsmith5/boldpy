@@ -1,4 +1,4 @@
-site_name: BoldPy v2.3.1 Documentation
+site_name: BoldPy v3.0.0 Documentation
 site_description: Renal BOLD MRI Analysis Framework with MLCO & K-Means Clustering
 site_author: BoldPy Development Team
 
@@ -55,7 +55,7 @@ nav:
   - K-Means Zone Clustering: kmeans-zone-clustering.md
   - Metrics Documentation: metrics-documentation.md
   - Examples with Data: examples-with-data.md
-  - PEP Integration (Roadmap): pep-integration.md
+  - PEP Integration: pep-integration.md
   - Changelog: ../CHANGELOG.md
 
 copyright: Copyright &copy; 2025-2026 BoldPy Development Team
