@@ -1,0 +1,46 @@
+pipeline_name: boldpy
+
+samples:
+
+  # ── Outer cortex T2* (ms) ──────────────────────────────────────────
+  outer_cortex_t2star_oxygen1:
+    type: number
+    description: Outer cortex median T2* — pre-O2 condition (ms)
+
+  outer_cortex_t2star_air:
+    type: number
+    description: Outer cortex median T2* — air condition (ms)
+
+  outer_cortex_t2star_oxygen2:
+    type: number
+    description: Outer cortex median T2* — post-O2 condition (ms)
+
+  outer_cortex_delta_t2star:
+    type: number
+    description: "Outer cortex ΔT2* = T2*(post-O2) − T2*(air) (ms)"
+
+  outer_cortex_t2star_std_oxygen2:
+    type: number
+    description: Outer cortex within-layer T2* std — post-O2 (ms, focal heterogeneity proxy)
+
+  # ── Whole-kidney T2* (ms) ──────────────────────────────────────────
+  median_t2star_air:
+    type: number
+    description: Whole-kidney bilateral median T2* — air condition (ms)
+
+  median_t2star_oxygen2:
+    type: number
+    description: Whole-kidney bilateral median T2* — post-O2 condition (ms)
+
+  # ── Pipeline metadata ───────────────────────────────────────────────
+  mlco_layers:
+    type: integer
+    description: Number of MLCO layers used
+
+  analysis_json:
+    type: string
+    description: Absolute path to the _complete_analysis.json output file
+
+  pipeline_completed:
+    type: boolean
+    description: True if all pipeline steps completed successfully

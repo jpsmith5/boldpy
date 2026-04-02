@@ -24,21 +24,17 @@ Combines two complementary views of T₂* heterogeneity:
 All outputs → {output_dir}/heterogeneity/
 
 Usage:
-    cd code/boldpy/boldpy_v2.2.1
-    python heterogeneity.py --config groups_config.json
+    cd code/boldpy/boldpy_v2.3.1
+    python heterogeneity.py --pep code/analysis/captopril/project_config.yaml
 
-groups_config.json format:
-    {
-      "output_dir": "processed/analysis/my_experiment",
-      "groups": {
-        "Group A": {"ids": ["s1", "s2"], "color": "#E74C3C", "ls": "--", "lw": 1.8, "short": "GrpA"},
-        "Group B": {"ids": ["s3"],       "color": "#2E86C1", "ls": "-",  "lw": 2.0, "short": "GrpB"}
-      }
-    }
+project_config.yaml format (PEP):
+    See pipeline/examples/project_config.yaml for a full template.
+    Key sections: sample_table, output_dir, prepared_dir, mlco_dir, group_styles.
 """
 
 import argparse
 import json
+import peppy
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -63,16 +59,36 @@ OUTPUT_DIR = BASE / 'processed' / 'analysis' / 'group_comparison' / 'heterogenei
 GROUPS = {}
 
 
-def load_groups_config(path):
-    """Load GROUPS and OUTPUT_DIR from a JSON groups config file."""
-    global GROUPS, OUTPUT_DIR
-    with open(path) as f:
-        cfg = json.load(f)
-    GROUPS = cfg['groups']
-    if 'output_dir' in cfg:
-        p = Path(cfg['output_dir'])
-        out = p if p.is_absolute() else BASE / p
-        OUTPUT_DIR = out / 'heterogeneity'
+def load_pep_project(pep_path):
+    """Load GROUPS, OUTPUT_DIR, PREP_DIR, MLCO_DIR from a PEP project_config.yaml."""
+    global GROUPS, OUTPUT_DIR, PREP_DIR, MLCO_DIR, ANAL_DIR
+    pep_path = Path(pep_path).resolve()
+    project  = peppy.Project(str(pep_path))
+    samples  = project.sample_table
+    styles   = project.config.get('group_styles', {})
+
+    # Reconstruct GROUPS in the full dict-of-dicts format used throughout this script
+    GROUPS = {}
+    for grp_id, df in samples.groupby('group', sort=False):
+        style   = dict(styles.get(grp_id, {}))
+        display = style.get('label', grp_id)
+        GROUPS[display] = {'ids': list(df['sample_name']), **style}
+
+    cfg  = project.config
+    base = pep_path.parent
+
+    def _resolve(key, default):
+        val = cfg.get(key)
+        if not val:
+            return default
+        p = Path(val)
+        return p if p.is_absolute() else base / p
+
+    out_base   = _resolve('group_output_dir', BASE / 'processed' / 'analysis' / 'group_comparison')
+    OUTPUT_DIR = out_base / 'heterogeneity'
+    ANAL_DIR   = _resolve('analysis_dir', BASE / 'processed' / 'analysis')
+    PREP_DIR   = _resolve('prepared_dir', BASE / 'processed' / 'prepared')
+    MLCO_DIR   = _resolve('mlco_dir',     BASE / 'processed' / 'mlco')
 
 # ── Parameters ─────────────────────────────────────────────────────────────────
 
@@ -652,9 +668,6 @@ def main():
         print(f'  {COND_LABELS[condition]}:')
         figure_heterogeneity_overview(all_profiles, condition, OUTPUT_DIR)
 
-    print('\nGenerating talk summary figure...')
-    figure_talk_summary(all_profiles, OUTPUT_DIR)
-
     print('\nGenerating outer cortex bar chart...')
     figure_outer_cortex_bars(all_profiles, OUTPUT_DIR)
 
@@ -681,9 +694,29 @@ def main():
     print(f'Done → {OUTPUT_DIR}')
 
 
+def run(pep_path, output_dir=None, **kwargs):
+    """
+    Importable entry point for heterogeneity.
+
+    Parameters
+    ----------
+    pep_path : str or Path
+        Path to PEP project_config.yaml.
+    output_dir : str or Path, optional
+        Override the output directory from the PEP config.
+    **kwargs
+        Absorbed for forward-compatibility.
+    """
+    global OUTPUT_DIR
+    load_pep_project(pep_path)
+    if output_dir is not None:
+        OUTPUT_DIR = Path(output_dir) / 'heterogeneity'
+    main()
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Heterogeneity Analysis')
-    parser.add_argument('--config', required=True, help='Path to groups_config.json')
+    parser.add_argument('--pep', required=True, help='Path to PEP project_config.yaml')
     args = parser.parse_args()
-    load_groups_config(args.config)
+    load_pep_project(args.pep)
     main()

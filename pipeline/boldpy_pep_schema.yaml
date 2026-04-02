@@ -1,0 +1,65 @@
+description: BoldPy PEP sample table schema
+imports:
+  - http://schema.databio.org/pep/2.0.0.yaml
+
+properties:
+  samples:
+    type: array
+    items:
+      type: object
+      properties:
+
+        # ── Required ──────────────────────────────────────────────────
+        sample_name:
+          type: string
+          description: "Unique sample identifier (matches directory names and file prefixes)"
+
+        group:
+          type: string
+          description: "Experimental group identifier (e.g. control, captopril, renin_ko)"
+
+        data_format:
+          type: string
+          enum: [dicom, bruker]
+          description: "Raw data format — selects prepare_dicom.py vs prepare_data.py"
+
+        scan_dir:
+          type: string
+          description: "Root directory containing raw MRI scan data for this sample"
+
+        # ── Optional: condition scan paths ────────────────────────────
+        scan_air:
+          type: string
+          description: "Path to air-condition scan (DICOM dir or Bruker .PvDatasets)"
+
+        scan_oxygen_1:
+          type: string
+          description: "Path to pre-O2 condition scan (oxygen_1)"
+
+        scan_oxygen_2:
+          type: string
+          description: "Path to post-O2 condition scan (oxygen_2)"
+
+        # ── Optional: pre-existing masks ─────────────────────────────
+        roi_mask:
+          type: string
+          description: "Path to binary ROI mask (.npy) — set after roi_drawer.py"
+
+        mlco_mask:
+          type: string
+          description: "Path to MLCO layer mask (.npy) — set after generate_mlco.py"
+
+        # ── Optional: pipeline parameters ────────────────────────────
+        n_layers:
+          type: [string, integer]
+          description: "Number of MLCO layers (default: 24)"
+
+        notes:
+          type: string
+          description: "Free-text notes (excluded scans, special handling, etc.)"
+
+      required:
+        - sample_name
+        - group
+        - data_format
+        - scan_dir

@@ -615,5 +615,138 @@ Examples:
         print(f"  Layers: 1-{args.n_layers}")
 
 
+def run(mask, anatomical, output_dir, label, n_layers=24, split=True,
+        component_names=('left', 'right'), no_mri_flip=False,
+        min_component_size=100, multi_region=False, layers_per_region=None,
+        method='distance', **kwargs):
+    """
+    Importable entry point for generate_mlco.
+
+    Mirrors the CLI behaviour of main() for the most common use cases.
+    The pipeline wrapper (boldpy_pipeline.py) uses the bilateral split path
+    which is the default (split=True).
+
+    Parameters
+    ----------
+    mask : str or Path
+        Path to organ mask .npy file (binary or bilateral).
+    anatomical : str or Path
+        Path to anatomical reference .npy file.
+    output_dir : str or Path
+        Directory to write MLCO mask and visualisation files.
+    label : str
+        Label prefix for output filenames (typically the sample name).
+    n_layers : int
+        Number of layers per component (default: 24).
+    split : bool
+        Split binary mask into bilateral components (default: True).
+    component_names : tuple of str
+        Names for the two bilateral components (default: ('left', 'right')).
+    no_mri_flip : bool
+        Disable MRI left-right flip convention (default: False).
+    min_component_size : int
+        Minimum component size in pixels (default: 100).
+    multi_region : bool
+        Process as multi-region mask (default: False).
+    layers_per_region : list of int, optional
+        Layers per region — required when multi_region=True.
+    method : str
+        Layer generation method: 'distance' or 'erosion' (default: 'distance').
+    **kwargs
+        Absorbed for forward-compatibility.
+
+    Returns
+    -------
+    output_file : Path
+        Path to the saved MLCO mask .npy file.
+    """
+    from pathlib import Path as _Path
+
+    mask         = _Path(mask)
+    anatomical   = _Path(anatomical)
+    output_dir   = _Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    print("=" * 70)
+    print("ENHANCED MLCO LAYER GENERATION")
+    print("=" * 70)
+
+    print("\nLoading data...")
+    mask_arr = np.load(mask)
+    anat_arr = np.load(anatomical)
+    print(f"  Mask shape: {mask_arr.shape}")
+    print(f"  Anatomical shape: {anat_arr.shape}")
+
+    print("\nDetecting mask type...")
+    mask_info = detect_mask_type(mask_arr)
+    print(f"  Type: {mask_info['type']}")
+    print(f"  Regions: {mask_info['n_regions']}")
+    print(f"  Region IDs: {mask_info['region_ids']}")
+
+    if multi_region or mask_info['is_multi_region']:
+        if not layers_per_region:
+            raise ValueError("layers_per_region required for multi-region masks")
+        mlco_mask = generate_multiregion_mlco_layers(
+            mask_arr, mask_info['region_ids'], layers_per_region, method
+        )
+        output_file = output_dir / f'{label}_mlco_multiregion.npy'
+        np.save(output_file, mlco_mask)
+        print(f"\nSaved multi-region MLCO mask: {output_file}")
+        viz_file = output_dir / f'{label}_mlco_multiregion_viz.png'
+        visualize_multiregion_mlco(
+            anat_arr, mlco_mask, mask_info['region_ids'], layers_per_region,
+            viz_file, f'{label} - Multi-Region MLCO'
+        )
+
+    elif split or mask_info['is_bilateral']:
+        print("\nSplitting bilateral mask...")
+        components = split_mask(
+            mask_arr,
+            component_names=tuple(component_names),
+            apply_mri_flip=not no_mri_flip,
+            min_size=min_component_size,
+        )
+        mlco_mask = generate_bilateral_mlco_layers(
+            mask_arr,
+            components[component_names[0]],
+            components[component_names[1]],
+            n_layers,
+        )
+        output_file = output_dir / f'{label}_mlco_bilateral.npy'
+        np.save(output_file, mlco_mask)
+        print(f"\nSaved bilateral MLCO mask: {output_file}")
+        viz_file = output_dir / f'{label}_mlco_bilateral_viz.png'
+        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+        ax.imshow(anat_arr, cmap='gray')
+        ax.imshow(np.ma.masked_where(mlco_mask == 0, mlco_mask),
+                  cmap='jet', alpha=0.5, vmin=1, vmax=2 * n_layers)
+        ax.set_title(f'{label} - Bilateral MLCO')
+        ax.axis('off')
+        plt.colorbar(ax.images[1], ax=ax, label='Layer')
+        plt.savefig(viz_file, dpi=150, bbox_inches='tight')
+        plt.close()
+        print(f"Saved visualisation: {viz_file}")
+
+    else:
+        print("\nGenerating single-region MLCO...")
+        mlco_mask = generate_mlco_layers(mask_arr, n_layers, method)
+        output_file = output_dir / f'{label}_mlco_single.npy'
+        np.save(output_file, mlco_mask)
+        print(f"\nSaved single-region MLCO mask: {output_file}")
+        viz_file = output_dir / f'{label}_mlco_single_viz.png'
+        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+        ax.imshow(anat_arr, cmap='gray')
+        ax.imshow(np.ma.masked_where(mlco_mask == 0, mlco_mask),
+                  cmap='jet', alpha=0.5, vmin=1, vmax=n_layers)
+        ax.set_title(f'{label} - Single-Region MLCO')
+        ax.axis('off')
+        plt.colorbar(ax.images[1], ax=ax, label='Layer')
+        plt.savefig(viz_file, dpi=150, bbox_inches='tight')
+        plt.close()
+        print(f"Saved visualisation: {viz_file}")
+
+    return output_file
+
+
 if __name__ == '__main__':
     main()

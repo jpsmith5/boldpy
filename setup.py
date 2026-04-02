@@ -15,7 +15,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="boldpy",
-    version="2.2.3",
+    version="3.0.0",
     description="Organ-Agnostic BOLD MRI Analysis Framework using Multi-Layer Concentric Objects",
     long_description=long_description,
     long_description_content_type="text/markdown",

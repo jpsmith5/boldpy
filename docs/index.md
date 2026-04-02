@@ -1,6 +1,6 @@
 # BoldPy Documentation
 
-**Tissue-Agnostic BOLD MRI Analysis Framework v2.3.1**
+**Tissue-Agnostic BOLD MRI Analysis Framework v3.0.0**
 
 Welcome to BoldPy, a comprehensive Python framework for analyzing Blood Oxygen Level Dependent (BOLD) MRI data across multiple tissue types.
 
@@ -63,17 +63,25 @@ BoldPy provides tools for:
 
 ---
 
-## What's New in v2.3.1
+## What's New in v3.0.0
+
+### PEP Integration and Dual-Use Design
+
+BoldPy v3.0.0 integrates the [PEP ecosystem](https://pep.databio.org) for sample metadata
+management and automated pipeline submission. The pipeline is **dual-use**: run via
+`looper` (PEPATAC/PEPPRO style) for automated batch processing, or run individual scripts
+directly as standalone commands. All analysis scripts expose both a CLI and a `run()`
+function for programmatic use. See [PEP Integration](pep-integration.md) for details.
 
 ### Consolidated Project Analysis Scripts
 
-Three generic, config-driven project-level analysis scripts replace the previous collection of hardcoded single-use scripts. All three accept a `--config groups_config.json` argument and work with any experiment:
+Three generic, config-driven project-level analysis scripts replace the previous collection of hardcoded single-use scripts. All three accept a `--pep project_config.yaml` argument and work with any experiment:
 
 - **`group_analysis.py`** — Cross-group MLCO profile comparison (T2*, R2*, perfusion mean ± SEM per layer with Mann-Whitney statistics and zone summary)
 - **`overlay_analysis.py`** — K-means zone overlays + MLCO layer overlays + zone statistics dot-plot in one pass
 - **`heterogeneity.py`** — Within-layer T2* heterogeneity profiling + focal disruption analysis (pixel distributions, spatial CV maps)
 
-See `examples/groups_config.json` for the config template and [Scripts Reference](scripts-reference.md#project-analysis-scripts) for full documentation.
+See `examples/project_config.yaml` for the config template and [Scripts Reference](scripts-reference.md#project-analysis-scripts) for full documentation.
 
 ### K-Means Zone Clustering (v2.3.0)
 
@@ -216,13 +224,13 @@ suggests tissue edema with impaired blood flow.
 
 ## Recent Updates
 
-### Version 2.3.1 (2026-03-04)
+### Version 3.0.0 (2026-03-05)
 
-**Script consolidation:**
-- `group_analysis.py` — Cross-group MLCO profiles, Mann-Whitney stats, zone summary
-- `overlay_analysis.py` — K-means + MLCO overlay visualization in one script
-- `heterogeneity.py` — Within-layer heterogeneity + focal disruption analysis
-- `examples/groups_config.json` — Template config for all project-level scripts
+**PEP integration and dual-use design:**
+- Group-level scripts now accept `--pep project_config.yaml` (replaces `--config groups_config.json`)
+- All analysis scripts expose a `run()` function for programmatic use
+- Pipeline wrappers in `pipeline/` call `run()` directly — no subprocess overhead
+- `examples/project_config.yaml` — Template PEP config for all project-level scripts
 
 ### Version 2.3.0 (2026-02-17)
 

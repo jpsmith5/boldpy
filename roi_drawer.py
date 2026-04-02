@@ -1158,6 +1158,68 @@ CURRENT REGIONS:
             return None
 
 
+def pick_draw_image(prepared_dir: Path) -> Optional[Path]:
+    """
+    Show all _draw_*.npy variants in prepared_dir as a numbered grid,
+    ask the user to pick one, and return its path.
+    """
+    draw_files = sorted(prepared_dir.glob("*_draw_*.npy"))
+    if not draw_files:
+        print(f"No _draw_*.npy files found in {prepared_dir}")
+        print("Run  make_draw_refs.py <sample_id>  first.")
+        return None
+
+    # Load thumbnails
+    imgs = []
+    for f in draw_files:
+        try:
+            imgs.append((f, np.load(f).astype(np.float32)))
+        except Exception:
+            pass
+
+    n = len(imgs)
+    ncols = min(n, 5)
+    nrows = (n + ncols - 1) // ncols
+
+    fig, axes = plt.subplots(nrows, ncols, figsize=(3.5 * ncols, 4 * nrows))
+    axes = np.array(axes).flatten()
+
+    for i, (f, arr) in enumerate(imgs):
+        ax = axes[i]
+        vmin, vmax = np.percentile(arr, 1), np.percentile(arr, 99)
+        ax.imshow(arr, cmap='gray', vmin=vmin, vmax=vmax, interpolation='nearest')
+        label = f.stem.split('_draw_', 1)[-1]
+        ax.set_title(f"[{i+1}]  {label}", fontsize=9, fontweight='bold')
+        ax.set_xticks([]); ax.set_yticks([])
+
+    for ax in axes[n:]:
+        ax.set_visible(False)
+
+    fig.suptitle(
+        f"Select reference image for ROI drawing — {prepared_dir.name}\n"
+        "Close this window, then type the number of your choice.",
+        fontsize=11, fontweight='bold'
+    )
+    plt.tight_layout()
+    plt.show(block=True)   # blocks until user closes the window
+
+    # Terminal prompt
+    print("\nAvailable images:")
+    for i, (f, _) in enumerate(imgs):
+        label = f.stem.split('_draw_', 1)[-1]
+        print(f"  [{i+1}] {label}")
+    while True:
+        try:
+            choice = int(input(f"\nEnter number (1–{n}): ").strip())
+            if 1 <= choice <= n:
+                chosen = imgs[choice - 1][0]
+                print(f"Selected: {chosen.name}")
+                return chosen
+            print(f"  Please enter a number between 1 and {n}.")
+        except (ValueError, EOFError):
+            print("  Invalid input.")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Unified interactive ROI drawing tool',
@@ -1165,26 +1227,41 @@ def main():
         epilog="""
 Examples:
 
-  # Single-region mode (binary mask)
-  python roi_drawer.py kidney.npy -o mask.npy
-  
-  # Multi-region mode (multi-label mask)
-  python roi_drawer.py kidney.npy -o mask.npy --regions cortex medulla papilla
+  # Direct — supply image path
+  python roi_drawer.py kidney.npy -o mask.npy --regions left_kidney right_kidney
 
-Mode is automatically detected based on --regions flag.
+  # Pick mode — choose from all available draw variants
+  python roi_drawer.py --pick processed/prepared/174229/ -o mask.npy --regions left_kidney right_kidney
+
+Mode (single vs multi-region) is automatically detected from --regions.
         """
     )
-    parser.add_argument('image', help='Path to anatomical image (.npy)')
+    parser.add_argument('image', nargs='?', default=None,
+                        help='Path to anatomical image (.npy) — omit when using --pick')
+    parser.add_argument('--pick', metavar='PREPARED_DIR',
+                        help='Directory of prepared sample: show all _draw_*.npy variants '
+                             'and interactively select one before drawing')
     parser.add_argument('--output', '-o', required=True, help='Output path for ROI mask')
-    parser.add_argument('--regions', '-r', nargs='+', 
-                       help='Region names for multi-region mode')
+    parser.add_argument('--regions', '-r', nargs='+',
+                        help='Region names for multi-region mode')
     parser.add_argument('--title', '-t', default='Draw ROI', help='Window title')
-    
+
     args = parser.parse_args()
+
+    # Resolve image path — either direct or via --pick
+    if args.pick:
+        chosen = pick_draw_image(Path(args.pick))
+        if chosen is None:
+            sys.exit(1)
+        image_path = chosen
+    elif args.image:
+        image_path = Path(args.image)
+    else:
+        parser.error("Provide an image path or use --pick PREPARED_DIR")
     
     # Load image
-    print(f"Loading image: {args.image}")
-    image = np.load(args.image)
+    print(f"Loading image: {image_path}")
+    image = np.load(image_path)
     print(f"Image shape: {image.shape}")
     
     # Detect mode and run appropriate drawer

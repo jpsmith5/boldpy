@@ -1,4 +1,4 @@
-# BoldPy v2.3.1
+# BoldPy v3.0.0
 
 **Renal BOLD MRI Analysis Framework with Multi-Layer Concentric Object (MLCO) Analysis,
 K-Means Zone Clustering, and Group-Level Statistics**
@@ -21,6 +21,23 @@ boundary detection, and heterogeneity analysis are built in.
 
 ---
 
+## Two Ways to Run
+
+**Pipeline mode (looper):** If you are familiar with PEPATAC or PEPPRO, you can use looper
+to run the full pipeline automatically across all samples defined in a PEP project config:
+
+```bash
+looper run looper_config.yaml        # runs per-sample pipeline on all samples
+looper collate looper_config.yaml    # runs project-level group analysis
+```
+
+See [PEP Integration](docs/pep-integration.md) for setup details.
+
+**Standalone mode:** Run individual scripts directly with their own CLI arguments —
+no looper or PEP config required. The Quick Start below follows this approach.
+
+---
+
 ## Features
 
 - **MLCO analysis** — 24-layer (configurable) bilateral radial segmentation from surface to center
@@ -36,12 +53,19 @@ boundary detection, and heterogeneity analysis are built in.
 
 ---
 
-## What's New in v2.3.1
+## What's New in v3.0.0
+
+### PEP Integration and Dual-Use Design
+
+Group-level scripts now accept `--pep project_config.yaml` instead of `--config groups_config.json`.
+The `groups_config.json` format is superseded by a PEP `project_config.yaml` + `sample_table.csv`
+pair. All analysis scripts expose a `run()` function for programmatic use in addition to their CLI.
+See [PEP Integration](docs/pep-integration.md) for details.
 
 ### Consolidated Project Analysis Scripts
 
 Three generic, config-driven scripts replace the previous collection of per-project analysis
-scripts. All accept `--config groups_config.json` and work with any experiment:
+scripts. All accept `--pep project_config.yaml` and work with any experiment:
 
 - **`group_analysis.py`** — Cross-group MLCO profile comparison (mean ± SEM per layer,
   Mann-Whitney tests, zone-level summary statistics)
@@ -50,7 +74,7 @@ scripts. All accept `--config groups_config.json` and work with any experiment:
 - **`heterogeneity.py`** — Within-layer T2* heterogeneity profiling + focal disruption
   analysis (pixel distributions, spatial local-CV maps)
 
-See `examples/groups_config.json` for the config template.
+See `pipeline/examples/project_config.yaml` for the config template.
 
 ### K-Means Zone Clustering (v2.3.0)
 
@@ -128,13 +152,13 @@ python boldpy_analyze.py --config sample_config.json \
 
 ### Project-Level Analysis (Step 5)
 
-After running `boldpy_analyze.py` for all samples, create a `groups_config.json`
-(see `examples/groups_config.json`) and run:
+After running `boldpy_analyze.py` for all samples, create a `project_config.yaml`
+(see `examples/project_config.yaml`) and run:
 
 ```bash
-python group_analysis.py   --config groups_config.json
-python overlay_analysis.py --config groups_config.json
-python heterogeneity.py    --config groups_config.json
+python group_analysis.py   --pep project_config.yaml
+python overlay_analysis.py --pep project_config.yaml
+python heterogeneity.py    --pep project_config.yaml
 ```
 
 ---
@@ -163,7 +187,7 @@ mkdocs serve
 ## Repository Layout
 
 ```
-boldpy_v2.3.1/
+boldpy_v3.0.0/
 ├── boldpy_analyze.py              # Per-sample pipeline orchestrator
 ├── prepare_data.py                # Data extraction (Bruker PvDatasets)
 ├── prepare_dicom.py               # Data extraction (DICOM)
@@ -181,7 +205,7 @@ boldpy_v2.3.1/
 ├── roi_format_utils.py            # ROI format utilities
 ├── src/boldpy/                    # Python package library
 ├── configs/                       # Zone and threshold YAML configs
-├── examples/                      # Tutorial data + groups_config.json template
+├── examples/                      # Tutorial data + project_config.yaml template
 └── docs/                          # Documentation (mkdocs)
 ```
 
@@ -196,7 +220,7 @@ If you use BoldPy in your research, please cite:
   title   = {BoldPy: Renal BOLD MRI Analysis Framework with MLCO and K-Means Zone Clustering},
   author  = {Your Name},
   year    = {2026},
-  version = {2.3.1},
+  version = {3.0.0},
   url     = {https://github.com/yourusername/boldpy}
 }
 ```

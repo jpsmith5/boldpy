@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.0] - 2026-03-05  **BREAKING**
+
+### Changed — PEP Ecosystem Integration
+
+Full integration with the [PEP ecosystem](https://pep.databio.org): peppy, looper,
+PyPiper, and pipestat. The `groups_config.json` format is **replaced** by
+`project_config.yaml` + `sample_table.csv`. This is a **breaking change** — scripts
+no longer accept `--config groups_config.json`.
+
+#### New: Per-sample PyPiper pipeline (`pipeline/boldpy_pipeline.py`)
+- Wraps Steps 0–4 for a single sample with PyPiper checkpointing and logging
+- Invoked by looper, one job per row in `sample_table.csv`
+- **Step 0** — data extraction (`prepare_dicom.py` / `prepare_data.py`)
+- **Step 1** — ROI drawing checkpoint: fails gracefully with instructions if `{sid}_roi.npy` missing; re-running looper resumes from Step 2
+- **Step 2** — MLCO generation (`generate_mlco.py`)
+- **Step 3** — per-sample analysis (`boldpy_analyze.py`)
+- **Step 4** — key metrics reported to pipestat results DB
+- Supports local and SLURM submission via looper compute packages
+
+#### New: Pipeline infrastructure (`pipeline/`)
+- `boldpy_pipeline_interface.yaml` — looper pipeline interface
+- `boldpy_pep_schema.yaml` — eido schema for validating `sample_table.csv`
+- `boldpy_pipestat_schema.yaml` — pipestat result schema (outer cortex T2*, ΔT2*, whole-kidney medians)
+- `templates/local.sub` — local bash submission template
+- `templates/slurm.sub` — SLURM submission template
+- `examples/project_config.yaml` — annotated example PEP project config
+- `examples/sample_table.csv` — example sample table
+- `examples/looper_config.yaml` — example looper config with local + SLURM packages
+
+#### Breaking: Group-level scripts now accept `--pep` instead of `--config`
+- `group_analysis.py`, `overlay_analysis.py`, `heterogeneity.py` all updated
+- `load_groups_config(path)` replaced by `load_pep_project(path)` in each script
+- Group membership from `sample_table.csv` `group` column
+- Plot styling (color, ls, lw, zorder, label) from `project_config.yaml` `group_styles` section
+- Project-level paths (`output_dir`, `analysis_dir`, `prepared_dir`, `mlco_dir`) configurable per-project
+
+#### New: Existing experiment configs converted to PEP format
+- `code/analysis/captopril/project_config.yaml` + `sample_table.csv`
+- `code/analysis/pilot_M1_vs_M2/project_config.yaml` + `sample_table.csv`
+
+#### Updated: `requirements.txt`
+Added: `peppy>=0.40.0`, `eido>=0.2.0`, `looper>=2.1.0`, `piper>=0.15.0`, `pipestat>=0.12.0`
+
+#### Updated: `docs/pep-integration.md`
+Converted from design document to implementation guide with quick-start commands.
+
+---
+
 ## [2.3.1] - 2026-03-04
 
 ### Added - Consolidated Project Analysis Scripts

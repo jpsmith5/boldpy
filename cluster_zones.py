@@ -662,7 +662,7 @@ def plot_clustering_diagnostics(
 
     # Color palette for clusters
     n_clusters = len(assignments)
-    cmap = plt.cm.get_cmap('tab10', max(n_clusters, 3))
+    cmap = plt.colormaps['tab10'].resampled(max(n_clusters, 3))
     zone_colors = {name: cmap(i) for i, name in enumerate(assignments.keys())}
 
     layer_indices = [f['layer_idx'] for f in layer_features]
@@ -842,7 +842,7 @@ def plot_cluster_overlay(
 
     # Color palette — matches the diagnostics plot
     n_clusters = len(assignments)
-    cmap = plt.cm.get_cmap('tab10', max(n_clusters, 3))
+    cmap = plt.colormaps['tab10'].resampled(max(n_clusters, 3))
     zone_colors = {name: cmap(i) for i, name in enumerate(assignments.keys())}
 
     # Build zone mask image (RGBA)

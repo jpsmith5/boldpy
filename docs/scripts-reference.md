@@ -162,37 +162,9 @@ python boldpy_analyze.py --group1-config wt.json --group2-config ko.json --compa
 
 ## Project Analysis Scripts
 
-These scripts operate at the **project level** — they read pre-computed per-sample analysis JSONs produced by `boldpy_analyze.py` and generate cross-group figures and statistics. They are all configured via a shared `groups_config.json` file (see `examples/groups_config.json` for a template).
+These scripts operate at the **project level** — they read pre-computed per-sample analysis JSONs produced by `boldpy_analyze.py` and generate cross-group figures and statistics. They are all configured via a PEP `project_config.yaml` file (see `pipeline/examples/project_config.yaml` for a template).
 
-**groups_config.json format:**
-```json
-{
-  "output_dir": "processed/analysis/my_experiment",
-  "hematology_csv": "data/hematology.csv",
-  "groups": {
-    "Control (n=2)": {
-      "ids":    ["sample_ctrl_1", "sample_ctrl_2"],
-      "color":  "#E74C3C",
-      "ls":     "--",
-      "lw":     1.8,
-      "zorder": 4,
-      "label":  "Control",
-      "short":  "Ctrl"
-    },
-    "Treatment (n=3)": {
-      "ids":    ["sample_trt_1", "sample_trt_2", "sample_trt_3"],
-      "color":  "#2E86C1",
-      "ls":     "-",
-      "lw":     2.0,
-      "zorder": 3,
-      "label":  "Treatment",
-      "short":  "Trt"
-    }
-  }
-}
-```
-
-All three scripts can also be used programmatically by patching their `GROUPS` and `OUTPUT_DIR` module globals directly (see `examples/` for driver script examples).
+All three scripts expose a `run()` function for programmatic use in addition to their CLI — see the "Programmatic use" subsection under each script below.
 
 ---
 
@@ -201,7 +173,7 @@ All three scripts can also be used programmatically by patching their `GROUPS` a
 
 **Usage:**
 ```bash
-python group_analysis.py --config groups_config.json
+python group_analysis.py --pep project_config.yaml
 ```
 
 **What it does:**
@@ -213,7 +185,7 @@ python group_analysis.py --config groups_config.json
 - Exports zone-level summary statistics as JSON
 
 **Key Options:**
-- `--config PATH`: Path to groups_config.json (required)
+- `--pep PATH`: Path to PEP project_config.yaml (required)
 
 **Outputs** (all in `{output_dir}/`):
 - `{cond}_t2star_profile.png/.svg` — T2* layer profiles, one per condition
@@ -222,6 +194,12 @@ python group_analysis.py --config groups_config.json
 - `hematology_comparison.png` — HCT figure (if hematology_csv provided)
 - `zone_summary_stats.json` — Zone-level mean ± SEM + p-values per group
 
+**Programmatic use:**
+```python
+import group_analysis
+group_analysis.run(pep_path="project_config.yaml", output_dir="results/")
+```
+
 ---
 
 ### `overlay_analysis.py`
@@ -229,7 +207,7 @@ python group_analysis.py --config groups_config.json
 
 **Usage:**
 ```bash
-python overlay_analysis.py --config groups_config.json
+python overlay_analysis.py --pep project_config.yaml
 ```
 
 **What it does** (three sequential steps):
@@ -246,7 +224,7 @@ python overlay_analysis.py --config groups_config.json
 3. **Zone analysis summary** — A dot-plot figure comparing k-means zone statistics (T2* mean, T2* std, perfusion) between groups, with Mann-Whitney p-values.
 
 **Key Options:**
-- `--config PATH`: Path to groups_config.json (required)
+- `--pep PATH`: Path to PEP project_config.yaml (required)
 
 **Outputs**:
 - `{analysis_dir}/{sid}/kmeans/{sid}_kmeans_{cond}.png/.svg` — Per-sample k-means overlays
@@ -255,6 +233,12 @@ python overlay_analysis.py --config groups_config.json
 - `{output_dir}/mlco_overlay_grid_{cond}.png/.svg` — MLCO grid per condition
 - `{output_dir}/kmeans_zone_analysis.png/.pdf/.svg` — Zone statistics dot-plot
 
+**Programmatic use:**
+```python
+import overlay_analysis
+overlay_analysis.run(pep_path="project_config.yaml", output_dir="results/")
+```
+
 ---
 
 ### `heterogeneity.py`
@@ -262,7 +246,7 @@ python overlay_analysis.py --config groups_config.json
 
 **Usage:**
 ```bash
-python heterogeneity.py --config groups_config.json
+python heterogeneity.py --pep project_config.yaml
 ```
 
 **What it does** (two sequential parts):
@@ -282,7 +266,7 @@ python heterogeneity.py --config groups_config.json
 - Generates spatial CV map panels showing per-sample maps and group difference maps
 
 **Key Options:**
-- `--config PATH`: Path to groups_config.json (required)
+- `--pep PATH`: Path to PEP project_config.yaml (required)
 
 **Outputs** (all in `{output_dir}/heterogeneity/`):
 - `heterogeneity_overview.png/.svg` — T2* std and CV layer profiles per group
@@ -292,6 +276,12 @@ python heterogeneity.py --config groups_config.json
 - `kde_distributions.png/.svg` — KDE distributions of OC pixel T2*
 - `spatial_cv_maps.png/.svg` — Spatial local-CV maps per sample and group difference
 - `focal_disruption_stats.json` — All statistics and p-values
+
+**Programmatic use:**
+```python
+import heterogeneity
+heterogeneity.run(pep_path="project_config.yaml", output_dir="results/")
+```
 
 ---
 

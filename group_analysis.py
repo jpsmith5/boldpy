@@ -9,18 +9,17 @@ bilateral MLCO profiles. Supports n > 1 per group — computes mean ± SEM.
 Zones are shaded using the standard 5-zone kidney config.
 
 Usage:
-    cd code/boldpy/boldpy_v2.2.1
-    python group_analysis.py --config groups_config.json
+    cd code/boldpy/boldpy_v2.3.1
+    python group_analysis.py --pep code/analysis/captopril/project_config.yaml
 
-groups_config.json format:
-    {
-      "output_dir": "processed/analysis/my_experiment",
-      "hematology_csv": "data/hematology.csv",
-      "groups": {
-        "Group A": {"ids": ["sample1", "sample2"], "color": "#E74C3C", "ls": "--", "lw": 1.8, "zorder": 4},
-        "Group B": {"ids": ["sample3"], "color": "#2E86C1", "ls": "-", "lw": 2.0, "zorder": 3}
-      }
-    }
+project_config.yaml format (PEP):
+    See pipeline/examples/project_config.yaml for a full template.
+    Key sections used by this script:
+      sample_table   — CSV with columns: sample_name, group, ...
+      output_dir     — where group-level figures are saved
+      analysis_dir   — where per-sample _complete_analysis.json live
+      hematology_csv — optional path to hematology CSV
+      group_styles   — per-group colors / line styles / labels (keyed by group id)
 
 Outputs saved to: {output_dir}/
 """
@@ -28,6 +27,7 @@ Outputs saved to: {output_dir}/
 import argparse
 import csv
 import json
+import peppy
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -50,20 +50,41 @@ GROUPS       = {}
 GROUP_STYLES = {}
 
 
-def load_groups_config(path):
-    """Load GROUPS, GROUP_STYLES, OUTPUT_DIR, and optional HEMATOLOGY_CSV."""
-    global GROUPS, GROUP_STYLES, OUTPUT_DIR, HEMATOLOGY_CSV
-    with open(path) as f:
-        cfg = json.load(f)
-    raw = cfg['groups']
-    GROUPS       = {k: v['ids'] for k, v in raw.items()}
-    GROUP_STYLES = {k: {kk: v[kk] for kk in ('color', 'ls', 'lw', 'zorder') if kk in v}
-                    for k, v in raw.items()}
-    if 'output_dir' in cfg:
-        p = Path(cfg['output_dir'])
-        OUTPUT_DIR = p if p.is_absolute() else BASE / p
-    if cfg.get('hematology_csv'):
-        HEMATOLOGY_CSV = Path(cfg['hematology_csv'])
+def load_pep_project(pep_path):
+    """Load GROUPS, GROUP_STYLES, OUTPUT_DIR, ANALYSIS_DIR, and optional
+    HEMATOLOGY_CSV from a PEP project_config.yaml."""
+    global GROUPS, GROUP_STYLES, OUTPUT_DIR, ANALYSIS_DIR, HEMATOLOGY_CSV
+    pep_path = Path(pep_path).resolve()
+    project  = peppy.Project(str(pep_path))
+    samples  = project.sample_table
+    styles   = project.config.get('group_styles', {})
+
+    # Build GROUPS and GROUP_STYLES keyed by display label (preserves existing API)
+    GROUPS       = {}
+    GROUP_STYLES = {}
+    for grp_id, df in samples.groupby('group', sort=False):
+        style   = dict(styles.get(grp_id, {}))
+        display = style.pop('label', grp_id)
+        GROUPS[display]       = list(df['sample_name'])
+        GROUP_STYLES[display] = style
+
+    # Project-level path overrides
+    cfg = project.config
+    base = pep_path.parent
+
+    def _resolve(key, default):
+        val = cfg.get(key)
+        if not val:
+            return default
+        p = Path(val)
+        return p if p.is_absolute() else base / p
+
+    OUTPUT_DIR   = _resolve('group_output_dir', BASE / 'processed' / 'analysis' / 'group_comparison')
+    ANALYSIS_DIR = _resolve('analysis_dir',     BASE / 'processed' / 'analysis')
+
+    hema = cfg.get('hematology_csv')
+    if hema:
+        HEMATOLOGY_CSV = Path(hema) if Path(hema).is_absolute() else base / hema
 
 ZONE_COLORS = {
     'outer_cortex':  '#E8F4F8',
@@ -140,6 +161,11 @@ def extract_profile(results: list, condition: str, metric: str, stat: str = 'mea
                 val = ldata[metric][stat]
                 if val is None or (isinstance(val, float) and np.isnan(val)):
                     continue
+                # Reject physiologically implausible values (artifact / DICOM overflow)
+                if metric == 't2star' and val > 200:
+                    continue
+                if metric == 'r2star' and val > 500:
+                    continue
                 per_layer.setdefault(layer_num, []).append(val)
 
     layers = sorted(per_layer.keys())
@@ -210,6 +236,51 @@ def plot_group_profile(ax, profile: dict, style: dict, label: str, n_samples: in
     if show_sem and n_samples > 1:
         ax.fill_between(x, mean - sem, mean + sem,
                         color=style['color'], alpha=0.20, zorder=style['zorder'] - 1)
+
+
+def figure_perfusion_baseline(group_results: dict, zone_config: dict, output_dir: Path):
+    """
+    Single-panel group comparison of baseline perfusion (air condition only).
+    Perfusion is a single measurement per sample, not condition-varying.
+    """
+    fig, ax = plt.subplots(figsize=(8, 4))
+    fig.suptitle('MLCO Group Comparison — Perfusion (baseline)',
+                 fontsize=12, fontweight='bold')
+
+    for group_name, results in group_results.items():
+        p = extract_profile(results, 'air', 'perfusion')
+        if len(p['layers']) == 0:
+            continue
+        # Count only samples that actually contributed perfusion data
+        n_perf = sum(
+            1 for r in results
+            if 'air' in r.get('conditions', {})
+            and any(
+                'perfusion' in ldata and ldata['perfusion'].get('mean') is not None
+                for ldata in get_bilateral_layers(r, 'air').values()
+            )
+        )
+        plot_group_profile(ax, p, GROUP_STYLES[group_name], group_name, n_perf)
+
+    ax.autoscale(axis='y')
+    ax.set_ylabel(METRIC_LABELS['perfusion'], fontsize=9)
+    ax.set_title('Baseline (air)', fontsize=10)
+    ax.set_xlabel('MLCO Layer (surface → center)', fontsize=9)
+    ax.tick_params(labelsize=8)
+    ax.grid(axis='y', alpha=0.3, zorder=1)
+    ax.set_xlim(0.5, 24.5)
+    ax.legend(fontsize=8, loc='upper right')
+    fig.canvas.draw()
+    add_zone_shading(ax, zone_config)
+    add_zone_labels(ax, zone_config)
+
+    plt.tight_layout()
+    out = output_dir / 'group_comparison_perfusion'
+    for fmt in ('png', 'svg', 'pdf'):
+        fig.savefig(out.with_suffix(f'.{fmt}'), dpi=300, bbox_inches='tight',
+                    facecolor='white')
+        print(f"  ✓ Saved: {out.with_suffix(f'.{fmt}').name}")
+    plt.close(fig)
 
 
 # ── Main figures ───────────────────────────────────────────────────────────────
@@ -1004,8 +1075,8 @@ def run_comparison(exclude_samples: list = None, out_dir: Path = None,
     figure_metric_profiles(group_results, zone_config, 'r2star', out_dir)
 
     print(f"\n{'─'*60}")
-    print("Generating perfusion profile (per condition)...")
-    figure_metric_profiles(group_results, zone_config, 'perfusion', out_dir)
+    print("Generating perfusion baseline profile (single condition)...")
+    figure_perfusion_baseline(group_results, zone_config, out_dir)
 
     print(f"\n{'─'*60}")
     print("Generating ΔT2* oxygen response...")
@@ -1013,13 +1084,13 @@ def run_comparison(exclude_samples: list = None, out_dir: Path = None,
 
     print(f"\n{'─'*60}")
     print("Generating within-group oxygen challenge plots...")
-    for metric in ['t2star', 'r2star', 'perfusion']:
+    for metric in ['t2star', 'r2star']:
         figure_combined_conditions(group_results, zone_config, metric, out_dir)
 
     print(f"\n{'─'*60}")
     print("Generating zone bar charts...")
     for condition in conditions_to_plot:
-        for metric in ['t2star', 'r2star', 'perfusion']:
+        for metric in ['t2star', 'r2star']:
             figure_zone_barplot(group_results, zone_config, condition, metric, out_dir)
 
     print(f"\n{'─'*60}")
@@ -1043,14 +1114,31 @@ def run_comparison(exclude_samples: list = None, out_dir: Path = None,
     print(f"Done. Outputs in: {out_dir}")
 
 
+def run(pep_path, output_dir=None, **kwargs):
+    """
+    Importable entry point for group_analysis.
+
+    Parameters
+    ----------
+    pep_path : str or Path
+        Path to PEP project_config.yaml.
+    output_dir : str or Path, optional
+        Override the output directory from the PEP config.
+    **kwargs
+        Absorbed for forward-compatibility.
+    """
+    load_pep_project(pep_path)
+    run_comparison(out_dir=Path(output_dir) if output_dir else None)
+
+
 def main():
     run_comparison()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Multi-Sample Group Comparison')
-    parser.add_argument('--config', required=True,
-                        help='Path to groups_config.json')
+    parser.add_argument('--pep', required=True,
+                        help='Path to PEP project_config.yaml')
     args = parser.parse_args()
-    load_groups_config(args.config)
+    load_pep_project(args.pep)
     main()

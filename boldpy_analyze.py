@@ -188,8 +188,8 @@ def load_data(config: dict) -> dict:
     print(f"    ✓ {mlco_path.name}")
     print(f"      {len(unique_layers)} layers loaded")
     
-    # Load perfusion (optional)
-    if 'perfusion_map' in config:
+    # Load perfusion (optional — may be None if excluded for methodological reasons)
+    if 'perfusion_map' in config and config['perfusion_map'] is not None:
         print(f"\n  Loading perfusion map:")
         perf_path = Path(config['perfusion_map'])
         
@@ -1587,6 +1587,97 @@ Note: Use prepare_data.py to generate t2star_maps, r2star_maps, and perfusion_ma
     print("ANALYSIS COMPLETE!")
     print("="*70)
     print(f"\nResults saved to: {args.output_dir}")
+
+
+def run(config, output_dir=None, n_layers=24, cluster_zones=False,
+        cluster_reference=None, save_cluster_config=None, zone_config=None,
+        **kwargs):
+    """
+    Importable entry point for boldpy_analyze (single-sample config mode).
+
+    Parameters
+    ----------
+    config : str or Path
+        Path to sample configuration JSON (same as --config).
+    output_dir : str or Path, optional
+        Output directory.  Required if not set inside the config JSON.
+    n_layers : int
+        Number of MLCO layers (default: 24).
+    cluster_zones : bool
+        Enable per-sample k-means zone clustering (default: False).
+    cluster_reference : str or Path, optional
+        Path to a saved clustered YAML to apply as shared reference (Workflow A).
+    save_cluster_config : str or Path, optional
+        Path to save the computed cluster config as YAML.
+    zone_config : str or Path, optional
+        Path to a static zone configuration YAML.
+    **kwargs
+        Absorbed for forward-compatibility (e.g. cluster_method,
+        cluster_condition, threshold_config passed through looper).
+
+    Returns
+    -------
+    results : dict
+        The analysis results dict returned by analyze_sample().
+    """
+    from pathlib import Path as _Path
+    import json as _json
+
+    config = _Path(config)
+    with open(config) as fh:
+        cfg = _json.load(fh)
+
+    if output_dir is None:
+        output_dir = cfg.get('output_dir')
+    if output_dir is None:
+        raise ValueError("output_dir must be supplied to run() or set in the config JSON")
+
+    output_dir = _Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Load zone / threshold configs when provided
+    if zone_config or kwargs.get('threshold_config'):
+        update_configs(
+            zone_config_path=_Path(zone_config) if zone_config else None,
+            threshold_config_path=_Path(kwargs['threshold_config']) if kwargs.get('threshold_config') else None,
+        )
+
+    # Resolve zone_config_override (Workflow A)
+    zone_config_override = None
+    if cluster_reference:
+        zone_config_override = load_zone_config(_Path(cluster_reference))
+
+    # Build cluster_args (Workflow B)
+    cluster_args = None
+    if cluster_zones:
+        cluster_args = {
+            'n_clusters':       kwargs.get('n_clusters', 3),
+            'method':           kwargs.get('cluster_method', 'kmeans'),
+            'condition':        kwargs.get('cluster_condition', None),
+            'save_config_path': _Path(save_cluster_config) if save_cluster_config else None,
+        }
+
+    data    = load_data(cfg)
+    results = analyze_sample(data, n_layers, output_dir,
+                             cluster_args=cluster_args,
+                             zone_config_override=zone_config_override)
+
+    # Generate standard plots for bilateral (non-multi-region) mode
+    is_multi_region = any(
+        cond_result.get('mode') == 'multi_region'
+        for cond_result in results.get('conditions', {}).values()
+    )
+    if not is_multi_region:
+        scan_conditions = list(results['conditions'].keys())
+        output_path = output_dir / f"{cfg['id']}_tlco_profiles.png"
+        plot_mlco_profile(
+            results['conditions'],
+            scan_conditions,
+            output_path,
+            cfg['id']
+        )
+
+    return results
 
 
 if __name__ == "__main__":

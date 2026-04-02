@@ -1059,5 +1059,100 @@ Note: Bruker T2* extraction requires pdata/2 in the .PvDatasets file.
         )
 
 
+def run(scan_dir, sample_name, output_dir, conditions=None,
+        extract_bruker=True, extract_custom=False, extract_perfusion=False,
+        output_2d=True, slice_index=None, t2_frame=None,
+        scan_oxygen1='', scan_air='', scan_oxygen2='', **kwargs):
+    """
+    Importable entry point for prepare_data.
+
+    Supports two modes:
+
+    1. Per-condition mode (Bruker, explicit subpaths):
+       If scan_oxygen1 / scan_air / scan_oxygen2 are provided, calls
+       prepare_single_scan() once per condition.
+
+    2. Single-scan mode:
+       Calls prepare_single_scan() on scan_dir directly.
+
+    Parameters
+    ----------
+    scan_dir : str or Path
+        Root directory for raw scan data (or path to a single .PvDatasets
+        file in single-scan mode).
+    sample_name : str
+        Sample identifier used as the filename prefix for outputs.
+    output_dir : str or Path
+        Directory for prepared output files.
+    conditions : list of str, optional
+        Unused (kept for forward-compatibility). Per-condition mapping is
+        handled via scan_oxygen1 / scan_air / scan_oxygen2.
+    extract_bruker : bool
+        Extract Bruker pre-fitted T2* from pdata/2 (default: True).
+    extract_custom : bool
+        Fit custom T2* from raw echoes in pdata/1 (default: False).
+    extract_perfusion : bool
+        Extract perfusion map (default: False).
+    output_2d : bool
+        Output 2D reference image (default: True).
+    slice_index : int, optional
+        Specific slice for 2D reference extraction.
+    t2_frame : int, optional
+        Manually specify T2* frame number (1-indexed).
+    scan_oxygen1 : str
+        PvDatasets subpath within scan_dir for oxygen_1 condition.
+    scan_air : str
+        PvDatasets subpath within scan_dir for air condition.
+    scan_oxygen2 : str
+        PvDatasets subpath within scan_dir for oxygen_2 condition.
+    **kwargs
+        Absorbed for forward-compatibility.
+
+    Returns
+    -------
+    results : dict or list of dict
+        Results from prepare_single_scan().
+    """
+    from pathlib import Path as _Path
+
+    scan_dir   = _Path(scan_dir)
+    output_dir = _Path(output_dir)
+
+    per_condition = scan_oxygen1 and scan_air and scan_oxygen2
+
+    if per_condition:
+        all_results = []
+        for cond, subpath in [
+            ('oxygen_1', scan_oxygen1),
+            ('air',      scan_air),
+            ('oxygen_2', scan_oxygen2),
+        ]:
+            result = prepare_single_scan(
+                pvdatasets_path=scan_dir / subpath,
+                output_dir=output_dir,
+                sample_name=f'{sample_name}_{cond}',
+                extract_bruker=extract_bruker,
+                extract_custom=extract_custom,
+                extract_perfusion_flag=extract_perfusion,
+                output_2d=output_2d,
+                slice_index=slice_index,
+                manual_frame=t2_frame,
+            )
+            all_results.append(result)
+        return all_results
+    else:
+        return prepare_single_scan(
+            pvdatasets_path=scan_dir,
+            output_dir=output_dir,
+            sample_name=sample_name,
+            extract_bruker=extract_bruker,
+            extract_custom=extract_custom,
+            extract_perfusion_flag=extract_perfusion,
+            output_2d=output_2d,
+            slice_index=slice_index,
+            manual_frame=t2_frame,
+        )
+
+
 if __name__ == '__main__':
     main()

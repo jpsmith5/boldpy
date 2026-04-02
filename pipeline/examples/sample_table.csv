@@ -1,0 +1,6 @@
+sample_name,group,data_format,scan_dir,scan_air,scan_oxygen_1,scan_oxygen_2,n_layers,notes
+ctrl_001,control,dicom,data/ctrl_001/,,,, 24,Control animal — 6 month timepoint
+ctrl_002,control,dicom,data/ctrl_002/,,,, 24,Control animal — 6 month timepoint
+trt_001,treatment,dicom,data/trt_001/,,,, 24,Treatment animal — 6 month timepoint
+trt_002,treatment,dicom,data/trt_002/,,,, 24,Treatment animal — 6 month timepoint
+trt_003,treatment,bruker,data/trt_003/,data/trt_003/E10/,data/trt_003/E7/,data/trt_003/E12/,24,Bruker PvDataset — scan paths pre-identified

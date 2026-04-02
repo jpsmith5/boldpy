@@ -1,0 +1,58 @@
+pep_version: "2.1.0"
+sample_table: sample_table.csv
+
+# ── Project-level paths ────────────────────────────────────────────────────────
+# Read by group_analysis.py / overlay_analysis.py / heterogeneity.py.
+
+results_root:     "processed"
+analysis_dir:     "processed/analysis"      # per-sample _complete_analysis.json
+prepared_dir:     "processed/prepared"      # per-sample T2* .npy files
+mlco_dir:         "processed/mlco"          # per-sample mlco_bilateral.npy
+group_output_dir: "processed/analysis/group_comparison"  # collator/group figure output
+
+hematology_csv: null
+
+# ── Sample modifiers ───────────────────────────────────────────────────────────
+sample_modifiers:
+
+  # output_dir is the per-sample directory used by looper + both pipelines.
+  derive:
+    attributes: [output_dir, prepared_dir_sample, mlco_dir_sample, results_dir]
+    sources:
+      output_dir:          "{results_root}/{sample_name}"
+      prepared_dir_sample: "{results_root}/prepared/{sample_name}"
+      mlco_dir_sample:     "{results_root}/mlco/{sample_name}"
+      results_dir:         "{results_root}/analysis/{sample_name}"
+
+  imply:
+    - if:
+        n_layers: ""
+      then:
+        n_layers: "24"
+
+  amend:
+    group_a_only:
+      sample_table: sample_table_group_a.csv
+    group_b_only:
+      sample_table: sample_table_group_b.csv
+
+# ── Group display styles ───────────────────────────────────────────────────────
+# Keyed by the 'group' column value in sample_table.csv.
+# PEP ignores this section — it is BoldPy-specific metadata.
+
+group_styles:
+  control:
+    color: "#E74C3C"
+    ls: "--"
+    lw: 1.8
+    zorder: 4
+    label: "Control"
+    short: "Ctrl"
+
+  treatment:
+    color: "#2E86C1"
+    ls: "-"
+    lw: 2.0
+    zorder: 3
+    label: "Treatment"
+    short: "Trt"

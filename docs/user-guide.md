@@ -1,6 +1,6 @@
 # Comprehensive User Guide
 
-This guide provides in-depth information on using BoldPy v2.3.1 for BOLD MRI analysis with MLCO (Multi-Layer Concentric Object) framework.
+This guide provides in-depth information on using BoldPy v3.0.0 for BOLD MRI analysis with MLCO (Multi-Layer Concentric Object) framework.
 
 ---
 
@@ -232,16 +232,32 @@ python boldpy_analyze.py \
 
 ## Step 5: Project-Level Analysis
 
-After running `boldpy_analyze.py` for each sample, three project-level scripts aggregate results across groups. All are configured via a `groups_config.json` file:
+After running `boldpy_analyze.py` for each sample, three project-level scripts aggregate results across groups. All are configured via a PEP `project_config.yaml` file:
 
 ```bash
-# Template: see examples/groups_config.json
-python group_analysis.py   --config groups_config.json   # Group MLCO profiles
-python overlay_analysis.py --config groups_config.json   # K-means + MLCO overlays
-python heterogeneity.py    --config groups_config.json   # Heterogeneity analysis
+# Template: see examples/project_config.yaml
+python group_analysis.py   --pep project_config.yaml   # Group MLCO profiles
+python overlay_analysis.py --pep project_config.yaml   # K-means + MLCO overlays
+python heterogeneity.py    --pep project_config.yaml   # Heterogeneity analysis
 ```
 
-**groups_config.json** specifies the output directory, optional hematology CSV, and per-group sample IDs, colors, and line styles. See `examples/groups_config.json` for a complete template.
+**project_config.yaml** specifies the output directory, optional hematology CSV, and per-group sample IDs, colors, and line styles via `group_styles`. See `examples/project_config.yaml` for a complete template.
+
+### Dual-Use Design
+
+BoldPy's architecture supports two usage modes:
+
+- **Standalone (CLI):** Run any script directly with its own arguments as shown above. No looper or PEP infrastructure required.
+- **Pipeline (looper):** Use `looper run looper_config.yaml` and `looper collate looper_config.yaml` to automate per-sample submission and project-level analysis across all samples in the PEP. Familiar if you have used PEPATAC or PEPPRO.
+
+All analysis scripts expose both a CLI entry point and a `run()` function for programmatic use. The pipeline wrappers in `pipeline/` call `run()` directly — there is no subprocess overhead. This means you can also call any analysis step from your own Python code:
+
+```python
+import group_analysis
+group_analysis.run(pep_path="project_config.yaml", output_dir="results/")
+```
+
+See [PEP Integration](pep-integration.md) for looper setup and the full pipeline architecture.
 
 | Script | Purpose |
 |--------|---------|

@@ -55,6 +55,7 @@ nav:
   - K-Means Zone Clustering: kmeans-zone-clustering.md
   - Metrics Documentation: metrics-documentation.md
   - Examples with Data: examples-with-data.md
+  - PEP Integration (Roadmap): pep-integration.md
   - Changelog: ../CHANGELOG.md
 
 copyright: Copyright &copy; 2025-2026 BoldPy Development Team

@@ -145,7 +145,7 @@ def classify_dicom_files(sample_dir: Path) -> Dict:
         # BOLD raw
         m = bold_pattern.search(fname)
         if m:
-            scan_id, condition, exp_num = m.group(1), m.group(2), m.group(3)
+            scan_id, condition, exp_num = m.group(1), m.group(2).lower(), m.group(3)
             classified['bold'][condition] = dcm_path
             classified['experiment_map'][f'E{exp_num}'] = condition
             matched = True
@@ -491,6 +491,55 @@ def extract_reference_from_dicom(dcm_path: Path) -> np.ndarray:
 
 
 # ============================================================================
+# MANUAL OVERRIDE HELPERS
+# ============================================================================
+
+def apply_experiment_overrides(classified: Dict, sample_dir: Path, overrides: Dict[str, int]) -> None:
+    """
+    Apply manual experiment-number overrides to the classified dict.
+
+    Parameters
+    ----------
+    classified : dict
+        Output from classify_dicom_files(); modified in-place.
+    sample_dir : Path
+        Directory containing DICOM files.
+    overrides : dict
+        Mapping of condition -> experiment number, e.g. {'pre': 3, 'post': 9}.
+        Conditions: 'pre', '20%' (or 'air'), 'post'.
+    """
+    sample_dir = Path(sample_dir)
+    # Normalise 'air' alias
+    norm = {'air': '20%'}
+    overrides = {norm.get(k, k): v for k, v in overrides.items()}
+
+    bold_pat = re.compile(r'_E(\d+)_P1_', re.IGNORECASE)
+    t2_pat = re.compile(r'_E(\d+)_P2_', re.IGNORECASE)
+
+    dcm_files = sorted(sample_dir.glob('*.dcm'))
+
+    for condition, exp_num in overrides.items():
+        e_key = f'E{exp_num}'
+
+        # Find BOLD raw file for this experiment
+        for f in dcm_files:
+            m = bold_pat.search(f.name)
+            if m and int(m.group(1)) == exp_num and '_BOLD_' in f.name:
+                classified['bold'][condition] = f
+                classified['experiment_map'][e_key] = condition
+                print(f"  [override] {condition} BOLD -> {f.name}")
+                break
+
+        # Find T2* parameter map for this experiment
+        for f in dcm_files:
+            m = t2_pat.search(f.name)
+            if m and int(m.group(1)) == exp_num and 'T2_relaxation' in f.name:
+                classified['t2_param_maps'][condition] = f
+                print(f"  [override] {condition} T2* map -> {f.name}")
+                break
+
+
+# ============================================================================
 # SAMPLE PREPARATION
 # ============================================================================
 
@@ -500,6 +549,7 @@ def prepare_dicom_sample(
     sample_name: Optional[str] = None,
     skip_perfusion: bool = False,
     no_reference: bool = False,
+    exp_overrides: Optional[Dict[str, int]] = None,
 ) -> Dict:
     """
     Prepare data from a single DICOM sample directory.
@@ -552,10 +602,18 @@ def prepare_dicom_sample(
     # Step 1: Classify DICOM files
     print("\n1. Classifying DICOM files...")
     classified = classify_dicom_files(sample_dir)
+
+    # Apply manual experiment-number overrides (if provided)
+    if exp_overrides:
+        print("  Applying manual experiment overrides...")
+        apply_experiment_overrides(classified, sample_dir, exp_overrides)
+
     print_classification_summary(classified, sample_dir)
 
     results['metadata']['session'] = classified.get('session')
     results['metadata']['warnings'] = classified.get('warnings', [])
+    if exp_overrides:
+        results['metadata']['exp_overrides'] = exp_overrides
 
     # Step 2: Extract T2* for each condition
     print("\n2. Extracting T2* maps...")
@@ -836,6 +894,26 @@ Examples:
         help='Sample name for output files (default: directory name)'
     )
 
+    # Manual experiment-number overrides (bypass auto-detection)
+    override_group = parser.add_argument_group(
+        'Manual overrides',
+        'Override auto-detected experiment numbers for each condition.\n'
+        'Use when filenames do not follow the expected naming convention.\n'
+        'Example: --pre-exp 3 --air-exp 8 --post-exp 9'
+    )
+    override_group.add_argument(
+        '--pre-exp', type=int, metavar='N',
+        help='Experiment number for pre-O2 (oxygen_1) condition'
+    )
+    override_group.add_argument(
+        '--air-exp', type=int, metavar='N',
+        help='Experiment number for air / 21%% O2 condition'
+    )
+    override_group.add_argument(
+        '--post-exp', type=int, metavar='N',
+        help='Experiment number for post-O2 (oxygen_2) condition'
+    )
+
     # Options
     parser.add_argument(
         '--list-only', action='store_true',
@@ -851,6 +929,15 @@ Examples:
     )
 
     args = parser.parse_args()
+
+    # Build exp_overrides dict from CLI args
+    exp_overrides = {}
+    if args.pre_exp is not None:
+        exp_overrides['pre'] = args.pre_exp
+    if args.air_exp is not None:
+        exp_overrides['air'] = args.air_exp
+    if args.post_exp is not None:
+        exp_overrides['post'] = args.post_exp
 
     # Set up logging
     logging.basicConfig(
@@ -891,6 +978,7 @@ Examples:
             sample_name=args.sample_name,
             skip_perfusion=args.skip_perfusion,
             no_reference=args.no_reference,
+            exp_overrides=exp_overrides or None,
         )
 
     # Batch mode
@@ -905,6 +993,60 @@ Examples:
             skip_perfusion=args.skip_perfusion,
             no_reference=args.no_reference,
         )
+
+
+def run(scan_dir, sample_name, output_dir, conditions=None,
+        skip_perfusion=False, no_reference=False,
+        pre_exp=None, air_exp=None, post_exp=None, **kwargs):
+    """
+    Importable entry point for prepare_dicom.
+
+    Parameters
+    ----------
+    scan_dir : str or Path
+        Directory containing DICOM files for the sample (input-dir mode).
+    sample_name : str
+        Sample identifier used as the filename prefix for outputs.
+    output_dir : str or Path
+        Directory for prepared output files.
+    conditions : list of str, optional
+        Unused (kept for forward-compatibility).
+    skip_perfusion : bool
+        Skip perfusion extraction (default: False).
+    no_reference : bool
+        Skip reference image extraction (default: False).
+    pre_exp : int, optional
+        Manual experiment-number override for pre-O2 condition.
+    air_exp : int, optional
+        Manual experiment-number override for air condition.
+    post_exp : int, optional
+        Manual experiment-number override for post-O2 condition.
+    **kwargs
+        Absorbed for forward-compatibility.
+
+    Returns
+    -------
+    results : dict
+        Results from prepare_dicom_sample().
+    """
+    from pathlib import Path as _Path
+
+    scan_dir   = _Path(scan_dir)
+    output_dir = _Path(output_dir)
+
+    exp_overrides = {}
+    if pre_exp  is not None: exp_overrides['pre']  = pre_exp
+    if air_exp  is not None: exp_overrides['air']  = air_exp
+    if post_exp is not None: exp_overrides['post'] = post_exp
+
+    return prepare_dicom_sample(
+        sample_dir=scan_dir,
+        output_dir=output_dir,
+        sample_name=sample_name,
+        skip_perfusion=skip_perfusion,
+        no_reference=no_reference,
+        exp_overrides=exp_overrides or None,
+    )
 
 
 if __name__ == '__main__':

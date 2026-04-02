@@ -1,0 +1,14 @@
+pipeline_name: boldpy_prepare
+input_schema: boldpy_pep_schema.yaml
+
+sample_interface:
+  command_template: >
+    python {looper.piface_dir}/boldpy_prepare.py
+    --sample-name {sample.sample_name}
+    --data-format {sample.data_format}
+    --scan-dir {sample.scan_dir}
+    --prepared-dir {sample.prepared_dir_sample}
+    --n-layers {sample.n_layers}
+    --scan-oxygen1 '{sample.scan_oxygen1}'
+    --scan-air '{sample.scan_air}'
+    --scan-oxygen2 '{sample.scan_oxygen2}'

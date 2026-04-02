@@ -442,37 +442,45 @@ brew install python-tk
 
 ## Step 5: Project-Level Group Analysis
 
-After running `boldpy_analyze.py` for all samples, three project-level scripts aggregate results across groups. All are configured via a single `groups_config.json` file (see `examples/groups_config.json` for a complete template):
-
-```json
-{
-  "output_dir": "processed/analysis/my_experiment",
-  "hematology_csv": null,
-  "groups": {
-    "Control (n=2)": {
-      "ids":   ["sample_ctrl_1", "sample_ctrl_2"],
-      "color": "#E74C3C", "ls": "--", "lw": 1.8, "zorder": 4,
-      "label": "Control", "short": "Ctrl"
-    },
-    "Treatment (n=3)": {
-      "ids":   ["sample_trt_1", "sample_trt_2", "sample_trt_3"],
-      "color": "#2E86C1", "ls": "-", "lw": 2.0, "zorder": 3,
-      "label": "Treatment", "short": "Trt"
-    }
-  }
-}
-```
+After running `boldpy_analyze.py` for all samples, three project-level scripts aggregate
+results across groups. All are configured via a PEP `project_config.yaml` file
+(see `examples/project_config.yaml` for a complete template).
 
 ```bash
 # MLCO layer profiles (mean ± SEM per layer, Mann-Whitney tests, zone summary stats)
-python group_analysis.py --config groups_config.json
+python group_analysis.py --pep project_config.yaml
 
 # K-means zone overlays + MLCO layer overlays + zone statistics dot-plot
-python overlay_analysis.py --config groups_config.json
+python overlay_analysis.py --pep project_config.yaml
 
 # Within-layer heterogeneity profiles + focal disruption analysis
-python heterogeneity.py --config groups_config.json
+python heterogeneity.py --pep project_config.yaml
 ```
+
+### Looper-Based Workflow (Alternative)
+
+If you are familiar with PEPATAC or PEPPRO, you can use looper to run the full pipeline
+automatically rather than executing each step manually:
+
+```bash
+# Templates live in pipeline/examples/ — copy and edit for your experiment
+cp pipeline/examples/project_config.yaml my_experiment/
+cp pipeline/examples/sample_table.csv    my_experiment/
+# ... edit sample_table.csv with your sample metadata ...
+
+# Run per-sample pipeline on all samples
+looper run looper_config.yaml
+
+# After drawing ROIs manually (looper will pause and instruct you), resume:
+looper run looper_config.yaml
+
+# Run project-level group analysis
+looper collate looper_config.yaml
+```
+
+Looper reads your `project_config.yaml`, submits per-sample jobs with PyPiper checkpointing,
+and then drives the group-level scripts. See [PEP Integration](pep-integration.md) for full
+setup instructions.
 
 | Script | Key Outputs |
 |--------|-------------|

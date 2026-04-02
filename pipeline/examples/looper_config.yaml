@@ -1,0 +1,29 @@
+# BoldPy looper configuration
+# Place this file alongside your project_config.yaml, or reference it
+# via LOOPER_CONFIG environment variable.
+#
+# Compute environment (submission templates) are managed by divvy — NOT this file.
+# Set up divvy once on your system:
+#   pip install divvy
+#   divcfg init ~/.divvy.yaml       # initialise with built-in compute packages
+#   divcfg show                     # list available packages (local, slurm, etc.)
+#   export DIVCFG=~/.divvy.yaml     # or add to your shell profile
+
+looper:
+  output_dir: "processed"
+
+  # Sample pipeline: run per sample with `looper run`
+  # Project pipeline: run once (all samples done) with `looper runp`
+  pipeline_interfaces:
+    sample:
+      - pipeline/boldpy_pipeline_interface.yaml
+    project:
+      - pipeline/boldpy_project_interface.yaml
+
+# Run commands:
+#   looper run    project_config.yaml                        # local, all samples
+#   looper runp   project_config.yaml                        # local, collator
+#   looper run    project_config.yaml --compute slurm        # SLURM (divvy pkg)
+#   looper run    project_config.yaml --sel-attr group --sel-incl captopril
+#   looper check  project_config.yaml                        # pipeline status
+#   looper report project_config.yaml                        # pipestat summary

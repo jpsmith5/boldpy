@@ -1,0 +1,8 @@
+pipeline_name: boldpy_collator
+pipeline_type: project
+command_template: >
+  python {pipeline.path}/boldpy_collator.py
+  --pep {pep.config_file}
+  --output-dir {looper.output_dir}
+  {looper.log_file}
+output_schema: boldpy_pipestat_schema.yaml
