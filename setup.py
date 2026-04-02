@@ -19,14 +19,13 @@ setup(
     description="Organ-Agnostic BOLD MRI Analysis Framework using Multi-Layer Concentric Objects",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="Your Name",
-    author_email="your.email@institution.edu",
-    url="https://github.com/yourusername/boldpy",
+    author="Jason Smith",
+    author_email="jasonsmith@virginia.edu",
+    url="https://github.com/jpsmith5/boldpy",
     license="MIT",
     
     # Package discovery
-    package_dir={"": "src"},
-    packages=find_packages(where="src"),
+    packages=find_packages(exclude=["tests*", "docs*", "examples*", "pipeline*"]),
     
     # Python version requirement
     python_requires=">=3.8",
@@ -54,13 +53,6 @@ setup(
             "mkdocs>=1.4.0",
             "mkdocs-material>=9.0.0",
             "mkdocstrings[python]>=0.20.0",
-        ],
-    },
-    
-    # Entry points for command-line scripts (optional)
-    entry_points={
-        "console_scripts": [
-            "boldpy-analyze=boldpy_analyze:main",
         ],
     },
     

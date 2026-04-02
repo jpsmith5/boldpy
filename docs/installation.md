@@ -29,7 +29,7 @@ Complete instructions for installing BoldPy and its dependencies.
 #### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/boldpy.git
+git clone https://github.com/jpsmith5/boldpy.git
 cd boldpy
 ```
 
@@ -73,7 +73,7 @@ For contributors who want to run tests and build documentation:
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/boldpy.git
+git clone https://github.com/jpsmith5/boldpy.git
 cd boldpy
 
 # Install with development dependencies
@@ -324,9 +324,9 @@ After installation:
 If you encounter installation issues:
 
 1. Check the troubleshooting section in [User Guide](user-guide.md)
-2. Search [GitHub Issues](https://github.com/yourusername/boldpy/issues)
-3. Ask in [GitHub Discussions](https://github.com/yourusername/boldpy/discussions)
-4. Email: your.email@institution.edu
+2. Search [GitHub Issues](https://github.com/jpsmith5/boldpy/issues)
+3. Ask in [GitHub Discussions](https://github.com/jpsmith5/boldpy/discussions)
+4. Email: jasonsmith@virginia.edu
 
 ---
 

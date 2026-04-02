@@ -24,7 +24,7 @@ Combines two complementary views of T₂* heterogeneity:
 All outputs → {output_dir}/heterogeneity/
 
 Usage:
-    cd code/boldpy/boldpy_v2.3.1
+    cd boldpy
     python heterogeneity.py --pep code/analysis/captopril/project_config.yaml
 
 project_config.yaml format (PEP):
@@ -54,7 +54,7 @@ ANAL_DIR   = BASE / 'processed' / 'analysis'
 OUTPUT_DIR = BASE / 'processed' / 'analysis' / 'group_comparison' / 'heterogeneity'
 
 # ── Groups ─────────────────────────────────────────────────────────────────────
-# Populated at runtime via --config groups_config.json
+# Populated at runtime via --pep project_config.yaml
 
 GROUPS = {}
 

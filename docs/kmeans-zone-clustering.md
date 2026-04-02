@@ -2,7 +2,7 @@
 
 ## Overview
 
-BoldPy v2.3.0 introduced **data-driven zone boundary detection** via k-means clustering on per-layer T2*/R2*/perfusion statistics. This replaces the need for hardcoded layer-to-zone mappings (e.g., "layers 1-5 = outer_cortex") with boundaries that adapt to each subject's anatomy.
+BoldPy v3.0.0 features **data-driven zone boundary detection** via k-means clustering on per-layer T2*/R2*/perfusion statistics. This replaces the need for hardcoded layer-to-zone mappings (e.g., "layers 1-5 = outer_cortex") with boundaries that adapt to each subject's anatomy.
 
 **Motivation:** Fixed zone boundaries don't account for inter-subject anatomical variability. In pathological models (e.g., Ren-KO mice with arterial hypertrophy and medullary degradation), the tissue boundaries can shift substantially from the standard reference. K-means clustering on the MLCO layer statistics finds natural tissue groupings directly from the data.
 

@@ -1166,7 +1166,7 @@ def pick_draw_image(prepared_dir: Path) -> Optional[Path]:
     draw_files = sorted(prepared_dir.glob("*_draw_*.npy"))
     if not draw_files:
         print(f"No _draw_*.npy files found in {prepared_dir}")
-        print("Run  make_draw_refs.py <sample_id>  first.")
+        print("Run  prepare_data.py  first to generate reference images.")
         return None
 
     # Load thumbnails

@@ -30,7 +30,7 @@ python prepare_data.py \
     --both-t2star
 ```
 
-**With Manual Frame Override (NEW in v2.2.1):**
+**With Manual Frame Override :**
 ```bash
 python prepare_data.py \
     --input scan.PvDatasets \
@@ -49,7 +49,7 @@ python prepare_data.py \
 4. Computes R2* maps (1000/T2*)
 5. Optionally extracts perfusion (pdata/2, Frame 5)
 
-**T2* Frame Detection (NEW in v2.2.1):**
+**T2* Frame Detection :**
 
 Three-tier approach for robust identification:
 - **Tier 1:** Reads Bruker `VisuCoreFrameType` metadata

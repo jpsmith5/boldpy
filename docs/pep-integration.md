@@ -108,8 +108,6 @@ looper check my_experiment/project_config.yaml
 
 After all samples complete:
 ```bash
-cd code/boldpy/boldpy_v3.0.0
-
 python group_analysis.py --pep my_experiment/project_config.yaml
 python overlay_analysis.py --pep my_experiment/project_config.yaml
 python heterogeneity.py --pep my_experiment/project_config.yaml
@@ -202,19 +200,14 @@ If a step's target file already exists, PyPiper skips it. This means:
 
 ---
 
-## Existing Experiments
+## Running Group-Level Analysis
 
-Converted configs for current experiments:
+After all per-sample jobs complete, run the three project-level scripts:
 
-| Experiment | Config |
-|------------|--------|
-| Captopril cohort (n=5 ctrl, n=5 capt) | `code/analysis/captopril/project_config.yaml` |
-| Pilot M1 WT vs M2 Renin KO | `code/analysis/pilot_M1_vs_M2/project_config.yaml` |
-
-Run group-level analysis with:
 ```bash
-cd code/boldpy/boldpy_v3.0.0
-python group_analysis.py --pep code/analysis/captopril/project_config.yaml
+python group_analysis.py   --pep my_experiment/project_config.yaml
+python overlay_analysis.py --pep my_experiment/project_config.yaml
+python heterogeneity.py    --pep my_experiment/project_config.yaml
 ```
 
 ---

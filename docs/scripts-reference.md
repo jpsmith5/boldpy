@@ -26,13 +26,13 @@ python prepare_data.py --input scan.PvDatasets --output-dir prepared/ --both-t2s
 - `--both-t2star`: Extract Bruker + fit custom T2*
 - `--custom-t2star`: Only custom fitting
 - `--no-bruker`: Skip Bruker extraction
-- `--t2-frame N`: Manually specify T2* frame (1-indexed) **(NEW in v2.2.1)**
+- `--t2-frame N`: Manually specify T2* frame (1-indexed) ****
 - `--extract-perfusion`: Extract perfusion from pdata/2
 - `--3d`: Full 3D output
 - `--slice N`: Specific slice
 - `--pattern`: File pattern for batch mode
 
-**T2* Frame Detection (NEW in v2.2.1):**
+**T2* Frame Detection :**
 
 Tiered approach for robust identification:
 1. **Tier 1 (Metadata):** Reads `VisuCoreFrameType` from Bruker visu_pars

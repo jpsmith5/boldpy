@@ -1,8 +1,8 @@
 # BoldPy Documentation
 
-**BOLD MRI Analysis Framework v3.0.0**
+**Tissue-Agnostic BOLD MRI Analysis Framework v3.0.0**
 
-Welcome to BoldPy, a comprehensive Python framework for analyzing Blood Oxygen Level Dependent (BOLD) MRI data in kidney.
+Welcome to BoldPy, a comprehensive Python framework for analyzing Blood Oxygen Level Dependent (BOLD) MRI data across multiple tissue types.
 
 ---
 
@@ -33,7 +33,7 @@ BoldPy provides tools for:
 - Tissue quality assessment with configurable viability thresholds
 - Missing layer handling (no crashes on incomplete data)
 
-### 🔍 Intelligent T2* Detection (NEW in v2.2.1)
+### 🔍 Intelligent T2* Detection
 - **Tier 1:** Metadata parsing from Bruker `VisuCoreFrameType`
 - **Tier 2:** Enhanced multi-factor scoring (100-point system)
 - **Tier 3:** Manual override with `--t2-frame N` option
@@ -83,13 +83,13 @@ Three generic, config-driven project-level analysis scripts replace the previous
 
 See `examples/project_config.yaml` for the config template and [Scripts Reference](scripts-reference.md#project-analysis-scripts) for full documentation.
 
-### K-Means Zone Clustering (v2.3.0)
+### K-Means Zone Clustering
 
 Data-driven zone boundary detection via `--cluster-zones` flag in `boldpy_analyze.py`. See [K-Means Zone Clustering](kmeans-zone-clustering.md) for details.
 
 ---
 
-## What's New in v2.2.1
+## Core Features
 
 ### Tiered T2* Frame Detection
 Intelligent three-tier system for robust frame identification:
@@ -211,7 +211,7 @@ suggests tissue edema with impaired blood flow.
 
 ### Reference
 - **[Scripts Reference](scripts-reference.md)** — All scripts documented (pipeline + project-level analysis)
-- **[K-Means Zone Clustering](kmeans-zone-clustering.md)** — Data-driven zone boundaries (v2.3.0+)
+- **[K-Means Zone Clustering](kmeans-zone-clustering.md)** — Data-driven zone boundaries 
 - **[Metrics Documentation](metrics-documentation.md)** — T2*, R2*, perfusion, and heterogeneity metrics
 
 ### Examples
@@ -287,7 +287,7 @@ If you use BoldPy in your research, please cite:
   author = {Jason Smith},
   title = {BoldPy: Tissue-Agnostic BOLD MRI Analysis Framework},
   year = {2026},
-  version = {3.0.0},
+  version = {2.1.0},
   url = {https://github.com/jpsmith5/boldpy}
 }
 ```
@@ -303,8 +303,8 @@ BoldPy is released under the MIT License. See [LICENSE](https://github.com/jpsmi
 ## Acknowledgments
 
 BoldPy was developed with support from:
-- University of Virginia
-- NIH/NIDDK
+- [Your Institution]
+- [Funding Agencies]
 - The open-source scientific Python community
 
 Built with: NumPy, SciPy, Matplotlib, scikit-image, scikit-learn

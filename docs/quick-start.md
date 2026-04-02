@@ -15,7 +15,7 @@ Get started with BoldPy's MLCO (Multi-Layer Concentric Object) analysis in 15 mi
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/boldpy.git
+git clone https://github.com/jpsmith5/boldpy.git
 cd boldpy
 pip install -e .
 ```
@@ -505,8 +505,8 @@ For k-means zone clustering in `boldpy_analyze.py` (per-sample or shared referen
 ## Getting Help
 
 - **Documentation:** [https://boldpy.readthedocs.io](https://boldpy.readthedocs.io)
-- **Issues:** [GitHub Issues](https://github.com/yourusername/boldpy/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/yourusername/boldpy/discussions)
+- **Issues:** [GitHub Issues](https://github.com/jpsmith5/boldpy/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/jpsmith5/boldpy/discussions)
 
 ---
 

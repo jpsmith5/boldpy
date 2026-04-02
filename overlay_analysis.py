@@ -32,7 +32,7 @@ all three outputs.
      → {output_dir}/mlco_overlay_grid_{condition}.{png,svg}
 
 Usage:
-    cd code/boldpy/boldpy_v2.3.1
+    cd boldpy
     python overlay_analysis.py --pep code/analysis/captopril/project_config.yaml
 
 project_config.yaml format (PEP):
@@ -70,7 +70,7 @@ ANALYSIS_DIR = BASE / 'processed' / 'analysis'
 OUTPUT_DIR   = ANALYSIS_DIR / 'group_comparison'
 
 # ── Groups ─────────────────────────────────────────────────────────────────────
-# Populated at runtime via --config groups_config.json
+# Populated at runtime via --pep project_config.yaml
 
 GROUPS = {}
 

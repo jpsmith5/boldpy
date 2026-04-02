@@ -76,7 +76,7 @@ scripts. All accept `--pep project_config.yaml` and work with any experiment:
 
 See `pipeline/examples/project_config.yaml` for the config template.
 
-### K-Means Zone Clustering (v2.3.0)
+### K-Means Zone Clustering
 
 Data-driven zone boundary detection replaces fixed layer-to-zone mappings:
 
@@ -96,7 +96,7 @@ See [K-Means Zone Clustering](docs/kmeans-zone-clustering.md) for full details.
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/boldpy
+git clone https://github.com/jpsmith5/boldpy
 cd boldpy
 pip install -e .                    # standard install
 pip install -e ".[dev]"             # with pytest, black, flake8

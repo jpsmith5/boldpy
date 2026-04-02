@@ -9,7 +9,7 @@ bilateral MLCO profiles. Supports n > 1 per group — computes mean ± SEM.
 Zones are shaded using the standard 5-zone kidney config.
 
 Usage:
-    cd code/boldpy/boldpy_v2.3.1
+    cd boldpy
     python group_analysis.py --pep code/analysis/captopril/project_config.yaml
 
 project_config.yaml format (PEP):
@@ -45,7 +45,7 @@ ANALYSIS_DIR = BASE / 'processed' / 'analysis'
 OUTPUT_DIR   = BASE / 'processed' / 'analysis' / 'group_comparison'
 HEMATOLOGY_CSV = None   # Set via --config hematology_csv key
 
-# Populated at runtime via --config groups_config.json
+# Populated at runtime via --pep project_config.yaml
 GROUPS       = {}
 GROUP_STYLES = {}
 
