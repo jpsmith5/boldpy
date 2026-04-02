@@ -30,11 +30,9 @@ no longer accept `--config groups_config.json`.
 - `boldpy_pipeline_interface.yaml` — looper pipeline interface
 - `boldpy_pep_schema.yaml` — eido schema for validating `sample_table.csv`
 - `boldpy_pipestat_schema.yaml` — pipestat result schema (outer cortex T2*, ΔT2*, whole-kidney medians)
-- `templates/local.sub` — local bash submission template
-- `templates/slurm.sub` — SLURM submission template
-- `examples/project_config.yaml` — annotated example PEP project config
-- `examples/sample_table.csv` — example sample table
-- `examples/looper_config.yaml` — example looper config with local + SLURM packages
+- `pipeline/examples/project_config.yaml` — annotated example PEP project config
+- `pipeline/examples/sample_table.csv` — example sample table
+- `pipeline/examples/looper_config.yaml` — example looper config
 
 #### Breaking: Group-level scripts now accept `--pep` instead of `--config`
 - `group_analysis.py`, `overlay_analysis.py`, `heterogeneity.py` all updated
@@ -42,10 +40,6 @@ no longer accept `--config groups_config.json`.
 - Group membership from `sample_table.csv` `group` column
 - Plot styling (color, ls, lw, zorder, label) from `project_config.yaml` `group_styles` section
 - Project-level paths (`output_dir`, `analysis_dir`, `prepared_dir`, `mlco_dir`) configurable per-project
-
-#### New: Existing experiment configs converted to PEP format
-- `code/analysis/captopril/project_config.yaml` + `sample_table.csv`
-- `code/analysis/pilot_M1_vs_M2/project_config.yaml` + `sample_table.csv`
 
 #### Updated: `requirements.txt`
 Added: `peppy>=0.40.0`, `eido>=0.2.0`, `looper>=2.1.0`, `piper>=0.15.0`, `pipestat>=0.12.0`
@@ -78,8 +72,10 @@ Three generic, config-driven project-level scripts replace the previous collecti
 - **Part 1 — Heterogeneity profiles:** T2* std, CV, IQR, skewness per MLCO layer with group mean ± SEM
 - **Part 2 — Focal disruption:** outer cortex pixel distributions, spatial local-CV maps, KDE/strip plots
 
-#### New Template: `examples/groups_config.json`
-- Complete template config for all project-level analysis scripts
+#### New Templates: `pipeline/examples/`
+- `project_config.yaml` — complete annotated PEP config template
+- `sample_table.csv` — example sample table with all required columns
+- `looper_config.yaml` — example looper config
 
 ### Changed
 - Superseded per-project scripts (`group_compare.py`, `kmeans_overlay.py`, `mlco_overlay.py`,
@@ -405,17 +401,9 @@ oxygen_challenge_analysis/
   ```
 
 ### Documentation
-- **New guides:**
-  - `MASTER_SESSION_SUMMARY.md` - Complete development session tracking
-  - `ENHANCED_BRUKER_FRAME_DETECTION.md` - Tiered detection system
-  - `INTEGER_X_AXIS_FORMATTING.md` - Visualization improvements
-  - `FIX_MISSING_LAYER_NUMBER_FIELD.md` - Robustness fixes
-  - `PREPARE_DATA_INTEGRATION_SUMMARY.md` - prepare_data.py enhancements
-- **Updated guides:**
-  - `COMPARISON_PLOTTING_ADDITION.md` - Group comparison features
-  - `PERFUSION_INTEGRATION_COMPLETE.md` - Perfusion in all plots
-  - `CONTINUOUS_PROFILES_USAGE_GUIDE.md` - Whole-kidney visualization
-  - `BOLD_MRI_INTERPRETATION_GUIDE.md` - Updated with new features
+- Updated `docs/quick-start.md` with full 5-step workflow
+- Updated `docs/scripts-reference.md` with new plotting functions
+- Updated `docs/user-guide.md` with perfusion and continuous profile workflows
 
 ### Technical Details
 - **Total additions:** ~800 lines of new functionality
