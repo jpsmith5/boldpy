@@ -1,8 +1,8 @@
 # BoldPy Documentation
 
-**Tissue-Agnostic BOLD MRI Analysis Framework v3.0.0**
+**BOLD MRI Analysis Framework v3.0.0**
 
-Welcome to BoldPy, a comprehensive Python framework for analyzing Blood Oxygen Level Dependent (BOLD) MRI data across multiple tissue types.
+Welcome to BoldPy, a comprehensive Python framework for analyzing Blood Oxygen Level Dependent (BOLD) MRI data in kidney.
 
 ---
 
@@ -123,7 +123,7 @@ See [Changelog](../CHANGELOG.md) for complete details.
 
 ```bash
 # Clone and install
-git clone https://github.com/yourusername/boldpy
+git clone https://github.com/jpsmith5/boldpy
 cd boldpy
 pip install -e .
 
@@ -267,14 +267,14 @@ BoldPy has been used in studies investigating:
 ### Getting Help
 
 - 📖 **[Documentation](https://boldpy.readthedocs.io)** - Comprehensive guides
-- 💬 **[Discussions](https://github.com/yourusername/boldpy/discussions)** - Ask questions
-- 🐛 **[Issues](https://github.com/yourusername/boldpy/issues)** - Report bugs
-- 📧 **Email** - your.email@institution.edu
+- 💬 **[Discussions](https://github.com/jpsmith5/boldpy/discussions)** - Ask questions
+- 🐛 **[Issues](https://github.com/jpsmith5/boldpy/issues)** - Report bugs
+- 📧 **Email** - jasonsmith@virginia.edu
 
 ### Contributing
 
 Contributions welcome — bug reports, feature suggestions, and pull requests are all appreciated.
-Please open an issue on [GitHub](https://github.com/yourusername/boldpy/issues) to get started.
+Please open an issue on [GitHub](https://github.com/jpsmith5/boldpy/issues) to get started.
 
 ---
 
@@ -284,11 +284,11 @@ If you use BoldPy in your research, please cite:
 
 ```bibtex
 @software{boldpy2026,
-  author = {Your Name},
+  author = {Jason Smith},
   title = {BoldPy: Tissue-Agnostic BOLD MRI Analysis Framework},
   year = {2026},
-  version = {2.1.0},
-  url = {https://github.com/yourusername/boldpy}
+  version = {3.0.0},
+  url = {https://github.com/jpsmith5/boldpy}
 }
 ```
 
@@ -296,15 +296,15 @@ If you use BoldPy in your research, please cite:
 
 ## License
 
-BoldPy is released under the MIT License. See [LICENSE](https://github.com/yourusername/boldpy/blob/main/LICENSE) for details.
+BoldPy is released under the MIT License. See [LICENSE](https://github.com/jpsmith5/boldpy/blob/main/LICENSE) for details.
 
 ---
 
 ## Acknowledgments
 
 BoldPy was developed with support from:
-- [Your Institution]
-- [Funding Agencies]
+- University of Virginia
+- NIH/NIDDK
 - The open-source scientific Python community
 
 Built with: NumPy, SciPy, Matplotlib, scikit-image, scikit-learn
