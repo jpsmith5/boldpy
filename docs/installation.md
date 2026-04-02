@@ -134,27 +134,27 @@ Run this command to verify all core functionality:
 ```bash
 python -c "
 from boldpy.fitting.t2star_fitter import fit_t2star_map
-from boldpy.analysis.perfusion_analysis import load_bruker_perfusion
 import numpy as np
 
-# Test T2* fitting
-test_data = np.random.randn(8, 100, 100) * 100 + 1000
-test_times = np.array([3, 7, 11, 15, 19, 23, 27, 31])
+# Synthetic 8-echo data: 100×100 map, all signal positive
+test_data = np.abs(np.random.randn(8, 100, 100)) * 100 + 200
+test_times = np.array([3, 7, 11, 15, 19, 23, 27, 31], dtype=float)
 result = fit_t2star_map(test_data, test_times, show_progress=False)
 
 print('✓ All core modules loaded successfully!')
-print(f'✓ T2* fitting works (result shape: {result[\"t2star\"].shape})')
+print(f'✓ T2* fitting works (fitted pixels: {result[\"success_map\"].sum()})')
 "
 ```
 
-### Run Example Analysis
-
-Test with provided example data (if available):
+### Run the Test Suite
 
 ```bash
-cd examples/
-python run_example_analysis.py
+pytest tests/ -v
 ```
+
+178 tests covering T2* fitting, MLCO generation, zone clustering, perfusion
+analysis, and tissue quality classification. All tests use synthetic data
+and complete in under 5 seconds — no raw MRI data required.
 
 ---
 

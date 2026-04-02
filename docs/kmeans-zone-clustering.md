@@ -155,11 +155,11 @@ The 4-panel diagnostic figure (`plot_clustering_diagnostics()`) provides:
 
 ---
 
-## Pilot Data Results
+## Example Results
 
-Tested on M1 (wild-type) and M2 (Ren-KO) mouse kidney data.
+The following outputs were produced from mouse kidney BOLD MRI data (200×200 resolution, 24-layer MLCO, air condition).
 
-### M1 (Wild-Type) — Air Condition
+### Normal Mouse Kidney — Air Condition
 
 Clean monotonic T2* gradient from cortex (~10 ms) to papilla (~17 ms).
 
@@ -183,7 +183,7 @@ Clean monotonic T2* gradient from cortex (~10 ms) to papilla (~17 ms).
 
 Outer cortex Jaccard is low because layers 1-2 have no MLCO pixels (too thin at 200x200 resolution) — this is expected.
 
-### M2 (Ren-KO) — Air Condition
+### Diseased Mouse Kidney (Ren-KO) — Air Condition
 
 Disrupted anatomy from concentric arterial/arteriolar hypertrophy with fluid-filled medullary degradation.
 
@@ -201,14 +201,14 @@ The clustering correctly isolates layers 15 and 17 — these show the pathologic
 
 Adding upsampled perfusion as a third clustering feature:
 
-- **M1:** Tightens the cortex/medulla boundary (perfusion jump at layers 7-8 provides additional separating signal beyond T2* alone)
-- **M2:** Critically important — perfusion reveals the pathological layers (15, 17: near-zero perfusion) that would otherwise be mixed with surrounding tissue based on T2* alone
+- **Normal kidney:** Tightens the cortex/medulla boundary (perfusion jump at layers 7-8 provides additional separating signal beyond T2* alone)
+- **Diseased kidney:** Critically important — perfusion reveals the pathological layers (near-zero perfusion) that would otherwise be mixed with surrounding tissue based on T2* alone
 
 ---
 
 ## Group Comparisons with Clustered Zones
 
-Per-sample k-means clustering assigns each sample its own zone boundaries. This means "zone_1" in M1 may cover layers 1-12 while in M2 it covers layers 1-8. Direct zone-level statistical comparison (e.g., "is cortex T2* higher in KO?") requires matching boundaries. BoldPy supports two workflows:
+Per-sample k-means clustering assigns each sample its own zone boundaries. This means "zone_1" in a control sample may cover layers 1-12 while in a disease sample it covers layers 1-8. Direct zone-level statistical comparison (e.g., "is cortex T2* higher in KO?") requires matching boundaries. BoldPy supports two workflows:
 
 ### Workflow A — Shared Reference Boundaries
 
