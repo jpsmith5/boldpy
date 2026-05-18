@@ -8,7 +8,7 @@ BoldPy v3.0.0 features **data-driven zone boundary detection** via k-means clust
 
 **Approach:** Cluster the 24 per-layer median T2* values (not individual voxels, which would be too noisy) to find natural tissue groupings. Map clusters to tissue names by spatial depth ordering (shallowest = cortex, deepest = papilla/inner_medulla). Output a zone config dict in the same format as existing YAML configs, so all downstream code works unchanged.
 
-**Reference:** Inspired by Menzies et al. (2013) — data-driven segmentation of renal tissue zones.
+**Reference:** Inspired by Menzies et al. (2013)<sup>[1]</sup> — anatomically unbiased, data-driven analysis of renal BOLD MRI using layer-based statistics.
 
 ---
 
@@ -439,3 +439,9 @@ pip install scikit-learn
 Required for clustering: `sklearn.cluster.KMeans`, `sklearn.mixture.GaussianMixture`, `sklearn.preprocessing.StandardScaler`, `sklearn.metrics.silhouette_score`
 
 Perfusion upsampling requires `scipy.ndimage.zoom` (already a core dependency).
+
+---
+
+## References
+
+1. Menzies RI, Zammit-Mangion A, Hollis LM, Lennen RJ, Jansen MA, Webb DJ, Mullins JJ, Dear JW, Sanguinetti G, Bailey MA. An anatomically unbiased approach for analysis of renal BOLD magnetic resonance images. *Am J Physiol Renal Physiol.* 2013;305(6):F845–F852. doi:[10.1152/ajprenal.00113.2013](https://doi.org/10.1152/ajprenal.00113.2013) PMID: 23863466
