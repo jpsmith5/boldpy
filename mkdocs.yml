@@ -22,18 +22,21 @@ markdown_extensions:
   - attr_list
   - tables
   - toc:
-      permalink: true
+      permalink: false
 
 nav:
-  - Home: index.md
-  - Quick Start: quick-start.md
-  - Installation: installation.md
-  - User Guide: user-guide.md
-  - Scripts Reference: scripts-reference.md
-  - K-Means Zone Clustering: kmeans-zone-clustering.md
-  - Metrics Documentation: metrics-documentation.md
-  - Examples with Data: examples-with-data.md
-  - PEP Integration: pep-integration.md
-  - Changelog: ../CHANGELOG.md
+  - Getting Started:
+    - Home: index.md
+    - Quick Start: quick-start.md
+    - Installation: installation.md
+  - User Guide:
+    - User Guide: user-guide.md
+    - Scripts Reference: scripts-reference.md
+    - PEP Integration: pep-integration.md
+  - Reference:
+    - K-Means Zone Clustering: kmeans-zone-clustering.md
+    - Metrics Documentation: metrics-documentation.md
+    - Examples with Data: examples-with-data.md
+    - Changelog: ../CHANGELOG.md
 
 copyright: Copyright &copy; 2025-2026 Jason Smith
