@@ -248,7 +248,7 @@ python heterogeneity.py    --pep project_config.yaml   # Heterogeneity analysis
 BoldPy's architecture supports two usage modes:
 
 - **Standalone (CLI):** Run any script directly with its own arguments as shown above. No looper or PEP infrastructure required.
-- **Pipeline (looper):** Use `looper run looper_config.yaml` and `looper collate looper_config.yaml` to automate per-sample submission and project-level analysis across all samples in the PEP. Familiar if you have used PEPATAC or PEPPRO.
+- **Pipeline (looper):** Use `looper run looper_config.yaml` and `looper collate looper_config.yaml` to automate per-sample submission and project-level analysis across all samples in the PEP.
 
 All analysis scripts expose both a CLI entry point and a `run()` function for programmatic use. The pipeline wrappers in `pipeline/` call `run()` directly — there is no subprocess overhead. This means you can also call any analysis step from your own Python code:
 

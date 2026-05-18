@@ -4,8 +4,7 @@
 
 BoldPy uses the [PEP (Portable Encapsulated Projects)](https://pep.databio.org) ecosystem
 for sample metadata management, automated per-sample pipeline submission, checkpoint/resume,
-and HPC support. If you have used [PEPATAC](https://pepatac.databio.org) or
-[PEPPRO](https://peppro.databio.org), this will be familiar.
+and HPC support.
 
 ---
 
@@ -265,4 +264,3 @@ a Jupyter notebook, or a custom batch script without invoking subprocesses.
 - [PEP specification](https://pep.databio.org/en/latest/specification/)
 - [PyPiper documentation](https://pypiper.databio.org)
 - [Looper documentation](https://looper.databio.org)
-- [PEPATAC pipeline](https://pepatac.databio.org) — reference implementation

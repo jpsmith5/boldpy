@@ -459,8 +459,8 @@ python heterogeneity.py --pep project_config.yaml
 
 ### Looper-Based Workflow (Alternative)
 
-If you are familiar with PEPATAC or PEPPRO, you can use looper to run the full pipeline
-automatically rather than executing each step manually:
+You can use looper to run the full pipeline automatically rather than executing each
+step manually:
 
 ```bash
 # Templates live in pipeline/examples/ — copy and edit for your experiment

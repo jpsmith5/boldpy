@@ -69,7 +69,7 @@ BoldPy provides tools for:
 
 BoldPy v3.0.0 integrates the [PEP ecosystem](https://pep.databio.org) for sample metadata
 management and automated pipeline submission. The pipeline is **dual-use**: run via
-`looper` (PEPATAC/PEPPRO style) for automated batch processing, or run individual scripts
+`looper` for automated batch processing across all samples, or run individual scripts
 directly as standalone commands. All analysis scripts expose both a CLI and a `run()`
 function for programmatic use. See [PEP Integration](pep-integration.md) for details.
 
@@ -144,7 +144,7 @@ ls tutorial_results/
 - Oxygen responsiveness analysis
 - Perfusion integration
 
-→ **[Tutorial README](../examples/tutorial_data/README.md)** for details  
+→ **Tutorial README** (`examples/tutorial_data/README.md`) for details  
 → **[Full Workflow Guide](quick-start.md)** to process your own data
 
 ---

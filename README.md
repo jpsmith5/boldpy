@@ -23,8 +23,8 @@ boundary detection, and heterogeneity analysis are built in.
 
 ## Two Ways to Run
 
-**Pipeline mode (looper):** If you are familiar with PEPATAC or PEPPRO, you can use looper
-to run the full pipeline automatically across all samples defined in a PEP project config:
+**Pipeline mode (looper):** You can use looper to run the full pipeline automatically
+across all samples defined in a PEP project config:
 
 ```bash
 looper run looper_config.yaml        # runs per-sample pipeline on all samples
@@ -105,6 +105,26 @@ pip install -e ".[docs]"            # with MkDocs (for building this site)
 ```
 
 **Requirements:** Python >= 3.8, numpy, scipy, matplotlib, scikit-image, scikit-learn, Pillow, tqdm
+
+**Typical install time:** ~2–5 minutes (first install, internet required); under 1 minute with a warm pip cache.
+
+### Tested configurations
+
+Tested on Python 3.10–3.12 with numpy 1.24–2.0, scipy 1.11–1.13, matplotlib 3.7–3.9, scikit-image 0.21–0.22, scikit-learn 1.3–1.5, Pillow 10.x, pydicom 2.4+ on Ubuntu 22.04 and Windows 11 (WSL2).
+
+`requirements.txt` specifies minimum compatible version bounds. For exact version pinning (e.g., STAR Methods reproducibility requirements), run `pip freeze > requirements-lock.txt` after installation.
+
+### Estimated run times
+
+| Step | Typical time |
+|------|-------------|
+| Data extraction (`prepare_data.py` / `prepare_dicom.py`) | 10–60 s |
+| ROI drawing (`roi_drawer.py`, interactive) | 2–5 min/sample |
+| MLCO generation (`generate_mlco.py`) | 5–30 s |
+| Per-sample analysis (`boldpy_analyze.py`) | 30–120 s |
+| Project-level analysis (all three scripts, 5–10 samples) | 1–3 min |
+
+A 10-sample cohort takes roughly **45–90 minutes total**, dominated by interactive ROI drawing.
 
 ---
 

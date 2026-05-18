@@ -119,9 +119,54 @@ For development and documentation:
 pytest>=7.0.0
 pytest-cov>=3.0.0
 mkdocs>=1.4.0
-mkdocs-material>=9.0.0
-mkdocstrings[python]>=0.20.0
+mkdocs-databio>=0.3.0
 ```
+
+---
+
+## Tested Configurations
+
+BoldPy has been tested on the following combinations:
+
+| Component | Tested versions |
+|-----------|----------------|
+| Python | 3.10, 3.11, 3.12 |
+| numpy | 1.24–2.0 |
+| scipy | 1.11–1.13 |
+| matplotlib | 3.7–3.9 |
+| scikit-image | 0.21–0.22 |
+| scikit-learn | 1.3–1.5 |
+| Pillow | 10.0–10.4 |
+| tqdm | 4.65+ |
+| pydicom | 2.4+ (DICOM support) |
+| **OS** | Ubuntu 22.04, Windows 11 (WSL2) |
+
+**Note on reproducibility:** `requirements.txt` specifies minimum compatible version bounds (`>=`), not the exact versions tested. For strict version pinning (e.g., STAR Methods / eLife reproducibility requirements), capture exact installed versions with:
+
+```bash
+pip freeze > requirements-lock.txt
+# or with conda:
+conda env export > environment.yml
+```
+
+---
+
+## Estimated Install and Run Times
+
+**Installation** (`pip install -e .`): ~2–5 minutes on a typical workstation with internet access (all dependencies downloaded from scratch). With a warm pip cache: under 1 minute.
+
+**Per-sample run times** (Steps 1–4 on a single mouse kidney dataset, ~200×200 px):
+
+| Step | Script | Typical time |
+|------|--------|-------------|
+| 1 | `prepare_data.py` / `prepare_dicom.py` | 10–60 s |
+| 2 | `roi_drawer.py` (interactive) | 2–5 min (user-dependent) |
+| 3 | `generate_mlco.py` (24 layers) | 5–30 s |
+| 4 | `boldpy_analyze.py` | 30–120 s |
+
+**Project-level analysis** (`group_analysis.py`, `overlay_analysis.py`, `heterogeneity.py`): 1–3 minutes for a cohort of 5–10 samples.
+
+For a typical 10-sample cohort, expect **~45–90 minutes total**, dominated by the interactive ROI drawing step.
 
 ---
 
